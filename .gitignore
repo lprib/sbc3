@@ -2,3 +2,4 @@ sbc3_pcb-backups/
 keyboard-backups/
 plots/
 fp-info-cache
+~*.lck
