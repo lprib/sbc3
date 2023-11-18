@@ -3,3 +3,4 @@ keyboard-backups/
 plots/
 fp-info-cache
 ~*.lck
+build/
