@@ -1,0 +1,16 @@
+[package]
+name = "main"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.3"
+panic-halt = "0.2.0"
+stm32f4 = "0.15.1"
+
+[dependencies.stm32f4xx-hal]
+version = "0.17.1"
+features = ["stm32f405"] # replace the model of your microcontroller here

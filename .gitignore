@@ -4,3 +4,5 @@ plots/
 fp-info-cache
 ~*.lck
 build/
+target/
+.vscode/
