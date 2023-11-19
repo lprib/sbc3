@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "debug main",
+            "request": "launch",
+            "type": "cortex-debug",
+            "preLaunchTask": "build main release",
+
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/target/thumbv7em-none-eabihf/release/main",
+            "svdFile": "${workspaceFolder}/STM32F405.svd",
+            "servertype": "openocd",
+            "configFiles": ["${workspaceFolder}/main/openocd.cfg"],
+            "gdbPath": "gdb-multiarch",
+            "objdumpPath": "arm-none-eabi-objdump",
+            "preLaunchCommands": [
+                "monitor init",
+                "monitor reset init",
+                "monitor halt",
+                "monitor flash write_image erase ${workspaceFolder}/target/thumbv7em-none-eabihf/release/main"
+            ],
+            // "postLaunchCommands": ["continue"] // Don't stop before at the first line
+        }
+    ]
+}
