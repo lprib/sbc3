@@ -137,6 +137,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  unsigned char test[] = "Hello\r\n";
+
   int i = 0;
   while (1)
   {
@@ -145,6 +147,7 @@ int main(void)
     if (i >= 16)
     {
       i = 0;
+      HAL_UART_Transmit(&huart3, test, sizeof(test), 10);
     }
     write_leds(1<<i);
     // HAL_GPIO_TogglePin(DBG_LED_GPIO_Port, DBG_LED_Pin);
