@@ -3,4 +3,5 @@
 members = [
     "main",
     "ledstrip",
+    "ssd1322",
 ]
