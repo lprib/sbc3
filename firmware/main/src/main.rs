@@ -31,7 +31,7 @@ fn main() -> ! {
     let gpioe = p.GPIOE.split();
     let dbg_led = gpiob.pb0.into_push_pull_output();
 
-    let mut delay = p.TIM2.delay_us(&clocks);
+    let mut delay = p.TIM2.delay_ms(&clocks);
 
     let mut leds = LedStrip::new(
         gpioe.pe2.into_push_pull_output(),
@@ -66,11 +66,35 @@ fn main() -> ! {
     // display.read(typ)
 
     display.reset(&mut delay).unwrap();
-    delay.delay_us(100_000u32);
-    display.write(TransactionType::Command, 0xaf).unwrap();
-    delay.delay_us(100_000u32);
-    display.write(TransactionType::Command, 0xa4).unwrap();
-    delay.delay_us(100_000u32);
+    delay.delay_ms(100u8);
+
+    display.write(TransactionType::Command, 0xaf);
+
+    display.write(TransactionType::Command, 0xa5);
+    delay.delay_ms(500u32);
+
+    for i in 70..255
+    {
+        display.write(TransactionType::Command, 0xc1);
+        display.write(TransactionType::Data, i);
+        delay.delay_ms(15u32);
+    }
+    // display.write_8080(TransactionType::Command, 0xa4, &mut delay);
+
+    // display.write_8080(TransactionType::Command, 0xa2, &mut delay);
+    // display.write_8080(TransactionType::Data, 100, &mut delay);
+
+    // display.write_8080(TransactionType::Command, 0x5c, &mut delay);
+    // for i in 0..15000
+    // {
+    //     display.write_8080(TransactionType::Data, 0x55, &mut delay);
+    // }
+
+    // delay.delay_us(100_000u32);
+    // display.write(TransactionType::Command, 0xaf).unwrap();
+    // delay.delay_us(100_000u32);
+    // display.write(TransactionType::Command, 0xa4).unwrap();
+    // delay.delay_us(100_000u32);
 
     // display.write(TransactionType::Command, 0x5c).unwrap();
     // delay.delay_us(100_000u32);
@@ -79,24 +103,24 @@ fn main() -> ! {
     //     display.write(TransactionType::Data, 0).unwrap();
     // }
 
-    display.write(TransactionType::Command, 0x15).unwrap();
-    delay.delay_us(100_000u32);
+    // display.write(TransactionType::Command, 0x15).unwrap();
+    // delay.delay_us(100_000u32);
 
-    display.write(TransactionType::Data, 0).unwrap();
-    delay.delay_us(100_000u32);
-    display.write(TransactionType::Data, 119).unwrap();
-    delay.delay_us(100_000u32);
+    // display.write(TransactionType::Data, 0).unwrap();
+    // delay.delay_us(100_000u32);
+    // display.write(TransactionType::Data, 119).unwrap();
+    // delay.delay_us(100_000u32);
 
-    display.write(TransactionType::Command, 0x5d).unwrap();
-    delay.delay_us(100_000u32);
-    let a = display.read(TransactionType::Data).unwrap();
-    delay.delay_us(100_000u32);
-    let b = display.read(TransactionType::Data).unwrap();
-    delay.delay_us(100_000u32);
-    let c = display.read(TransactionType::Data).unwrap();
-    delay.delay_us(100_000u32);
+    // display.write(TransactionType::Command, 0x5d).unwrap();
+    // delay.delay_us(100_000u32);
+    // let a = display.read(TransactionType::Data).unwrap();
+    // delay.delay_us(100_000u32);
+    // let b = display.read(TransactionType::Data).unwrap();
+    // delay.delay_us(100_000u32);
+    // let c = display.read(TransactionType::Data).unwrap();
+    // delay.delay_us(100_000u32);
 
-    writeln!(tx, "Got {a} {b} {c}");
+    // writeln!(tx, "Got {a} {b} {c}");
 
     loop {
         delay.delay_us(200_000u32);

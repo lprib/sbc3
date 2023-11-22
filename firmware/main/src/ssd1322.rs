@@ -43,6 +43,10 @@ where
         delay.delay_ms(100);
         self.res.set_high()?;
         Self::setup_data_bus();
+
+        self.cs.set_high()?;
+        self.wr.set_high()?;
+        self.rd.set_high()?;
         Ok(())
     }
 
@@ -96,6 +100,33 @@ where
             // read IDR
             ((*gpio_reg).idr.read().bits() & 0xff) as u8
         }
+    }
+
+    pub fn write_8080(&mut self, typ: TransactionType, data: u8, delay: &mut impl DelayMs<u8>)
+    {
+        Self::set_data_bus_output();
+        Self::write_data_bus(data);
+
+        delay.delay_ms(1);
+
+        self.dc.set_state(match typ {
+            TransactionType::Command => PinState::Low,
+            TransactionType::Data => PinState::High,
+        });
+        delay.delay_ms(1);
+        self.cs.set_low();
+        delay.delay_ms(1);
+        // t_as (10ns min)
+        self.wr.set_low();
+        delay.delay_ms(1);
+        // max(t_dsw, t_pwlw): t_dsw 40ns, t_pwlw 60ns
+
+        self.wr.set_high();
+        delay.delay_ms(1);
+        // t_pwhw
+        self.cs.set_high();
+        
+        delay.delay_ms(1);
     }
 
 }
