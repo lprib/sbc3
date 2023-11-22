@@ -1,7 +1,5 @@
-#![no_std]
-
+use stm32f4xx_hal::hal::digital::v2::OutputPin;
 use cortex_m::asm::delay;
-use embedded_hal::digital::v2::OutputPin;
 
 pub struct LedStrip<SD, SCLK, RCLK> {
     sd: SD,
