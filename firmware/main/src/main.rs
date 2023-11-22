@@ -67,14 +67,21 @@ fn main() -> ! {
 
     display.reset(&mut delay).unwrap();
     delay.delay_us(100_000u32);
-    display.write(TransactionType::Command, 0xa5).unwrap();
+    display.write(TransactionType::Command, 0xaf).unwrap();
+    delay.delay_us(100_000u32);
+    display.write(TransactionType::Command, 0xa4).unwrap();
     delay.delay_us(100_000u32);
 
-    display.write(TransactionType::Command, 0x5c).unwrap();
-    delay.delay_us(100_000u32);
+    // display.write(TransactionType::Command, 0x5c).unwrap();
+    // delay.delay_us(100_000u32);
+    // for i in 0..65535
+    // {
+    //     display.write(TransactionType::Data, 0).unwrap();
+    // }
 
     display.write(TransactionType::Command, 0x15).unwrap();
     delay.delay_us(100_000u32);
+
     display.write(TransactionType::Data, 0).unwrap();
     delay.delay_us(100_000u32);
     display.write(TransactionType::Data, 119).unwrap();

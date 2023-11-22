@@ -1,7 +1,7 @@
 use stm32f4::stm32f405::GPIOD;
 use stm32f4xx_hal::{
     adc::config::Scan,
-    hal::{blocking::delay::DelayUs, digital::v2::*},
+    hal::{blocking::delay::DelayMs, digital::v2::*},
 };
 
 pub trait CycleDelay {
@@ -36,9 +36,11 @@ where
     RES: OutputPin<Error = PinError>,
 {
     /// Reset the chip. Wait at least 300ms for chip to come up.
-    pub fn reset(&mut self, delay: &mut impl DelayUs<u8>) -> Result<(), PinError> {
+    pub fn reset(&mut self, delay: &mut impl DelayMs<u8>) -> Result<(), PinError> {
+        self.res.set_high()?;
+        delay.delay_ms(100);
         self.res.set_low()?;
-        delay.delay_us(100);
+        delay.delay_ms(100);
         self.res.set_high()?;
         Self::setup_data_bus();
         Ok(())
@@ -95,6 +97,7 @@ where
             ((*gpio_reg).idr.read().bits() & 0xff) as u8
         }
     }
+
 }
 
 impl<RD, WR, CS, DC, RES, PinError> DisplayInterface for Parallel8080<RD, WR, CS, DC, RES>
@@ -111,11 +114,11 @@ where
         Self::set_data_bus_output();
         Self::write_data_bus(data);
 
-        self.cs.set_low()?;
         self.dc.set_state(match typ {
-            TransactionType::Data => PinState::Low,
-            TransactionType::Command => PinState::High,
+            TransactionType::Command => PinState::Low,
+            TransactionType::Data => PinState::High,
         })?;
+        self.cs.set_low()?;
         // t_as (10ns min)
         cortex_m::asm::delay(11); // at 168 MHZ (TOOD(liam): make generic)
         self.wr.set_low()?;
@@ -126,16 +129,17 @@ where
         // t_pwhw
         cortex_m::asm::delay(11);
         self.cs.set_high()?;
+
         Ok(())
     }
 
     fn read(&mut self, typ: TransactionType) -> Result<u8, Self::Error> {
         Self::set_data_bus_input();
-        self.cs.set_low()?;
         self.dc.set_state(match typ {
-            TransactionType::Data => PinState::Low,
-            TransactionType::Command => PinState::High,
+            TransactionType::Command => PinState::Low,
+            TransactionType::Data => PinState::High,
         })?;
+        self.cs.set_low()?;
         // t_as (10ns min)
         cortex_m::asm::delay(11); // at 168 MHZ (TOOD(liam): make generic)
         self.rd.set_low()?;
