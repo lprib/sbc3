@@ -68,17 +68,74 @@ fn main() -> ! {
     display.reset(&mut delay).unwrap();
     delay.delay_ms(100u8);
 
+
+    // display.write(TransactionType::Command, 0xb3);
+    display.write(TransactionType::Command, 0xfd);
+    display.write(TransactionType::Data, 0x12);
+
+    display.write(TransactionType::Command, 0xae);
+
+    display.write(TransactionType::Command, 0xb3);
+    display.write(TransactionType::Data, 0xf1);
+
+    display.write(TransactionType::Command, 0xca);
+    display.write(TransactionType::Data, 0x3f);
+    
+    display.write(TransactionType::Command, 0xa2);
+    display.write(TransactionType::Data, 0);
+
+    display.write(TransactionType::Command, 0xa1);
+    display.write(TransactionType::Data, 0);
+
+    display.write(TransactionType::Command, 0xa0);
+    display.write(TransactionType::Data, 0x14);
+    display.write(TransactionType::Data, 0x11);
+
+    display.write(TransactionType::Command, 0xab);
+    display.write(TransactionType::Data, 1);
+
+    display.write(TransactionType::Command, 0xb4);
+    display.write(TransactionType::Data, 0xa0);
+    display.write(TransactionType::Data, 0xfd);
+
+    display.write(TransactionType::Command, 0xc1);
+    display.write(TransactionType::Data, 0xff);
+
+    display.write(TransactionType::Command, 0xc7);
+    display.write(TransactionType::Data, 0x0f);
+
+    display.write(TransactionType::Command, 0xb1);
+    display.write(TransactionType::Data, 0xf0);
+
+    display.write(TransactionType::Command, 0xd1);
+    display.write(TransactionType::Data, 0x82);
+    display.write(TransactionType::Data, 0x20);
+
+    display.write(TransactionType::Command, 0xbb);
+    display.write(TransactionType::Data, 0x0d);
+
+    display.write(TransactionType::Command, 0xbe);
+    display.write(TransactionType::Data, 0x00);
+
+    display.write(TransactionType::Command, 0xa6);
+
     display.write(TransactionType::Command, 0xaf);
 
-    display.write(TransactionType::Command, 0xa5);
-    delay.delay_ms(500u32);
 
-    for i in 70..255
-    {
-        display.write(TransactionType::Command, 0xc1);
-        display.write(TransactionType::Data, i);
-        delay.delay_ms(15u32);
+    display.write(TransactionType::Command, 0x15);
+    display.write(TransactionType::Data, 0x1c);
+    display.write(TransactionType::Data, 0x5b);
+
+    display.write(TransactionType::Command, 0x75);
+    display.write(TransactionType::Data, 0);
+    display.write(TransactionType::Data, 63);
+
+    display.write(TransactionType::Command, 0x5c);
+
+    for i in 0..(7556*2) {
+        display.write(TransactionType::Data, (i&0x0f) as u8);
     }
+
     // display.write_8080(TransactionType::Command, 0xa4, &mut delay);
 
     // display.write_8080(TransactionType::Command, 0xa2, &mut delay);

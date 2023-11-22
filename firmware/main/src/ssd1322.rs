@@ -47,6 +47,8 @@ where
         self.cs.set_high()?;
         self.wr.set_high()?;
         self.rd.set_high()?;
+
+        self.cs.set_low()?;
         Ok(())
     }
 
@@ -69,7 +71,7 @@ where
     fn set_data_bus_output() {
         unsafe {
             let gpio_reg = GPIOD::PTR;
-            // set output, MODER[1:0] = 2
+            // set direction output, MODER[1:0] = 2
             (*gpio_reg)
                 .moder
                 .modify(|r, w| w.bits((r.bits() & !0xffffu32) | 0x5555u32));
@@ -79,7 +81,7 @@ where
     fn set_data_bus_input() {
         unsafe {
             let gpio_reg = GPIOD::PTR;
-            // set output, MODER[1:0] = 0
+            // set direction input, MODER[1:0] = 0
             (*gpio_reg).moder.modify(|r, w| w.bits(r.bits() & !0xffffu32));
         }
     }
@@ -149,7 +151,7 @@ where
             TransactionType::Command => PinState::Low,
             TransactionType::Data => PinState::High,
         })?;
-        self.cs.set_low()?;
+        // self.cs.set_low()?;
         // t_as (10ns min)
         cortex_m::asm::delay(11); // at 168 MHZ (TOOD(liam): make generic)
         self.wr.set_low()?;
@@ -159,7 +161,7 @@ where
         self.wr.set_high()?;
         // t_pwhw
         cortex_m::asm::delay(11);
-        self.cs.set_high()?;
+        // self.cs.set_high()?;
 
         Ok(())
     }
