@@ -16,7 +16,7 @@ pub enum TransactionType {
     Command,
 }
 
-pub trait DisplayInterface {
+pub trait Ssd1322 {
     type Error;
     fn write(&mut self, txn_type: TransactionType, data: u8) -> Result<(), Self::Error>;
     fn write_data(&mut self, data: &[u8]) -> Result<(), Self::Error>;

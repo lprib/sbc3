@@ -1,7 +1,7 @@
 use stm32f4::stm32f405::GPIOD;
 use stm32f4xx_hal::hal::{blocking::delay::DelayMs, digital::v2::*};
 
-use super::{DisplayInterface, TransactionType};
+use super::{Ssd1322, TransactionType};
 
 fn dc_state(txn_type: TransactionType) -> PinState {
     match txn_type {
@@ -98,7 +98,7 @@ where
     }
 }
 
-impl<RD, WR, CS, DC, RES, PinError> DisplayInterface for Parallel8080<RD, WR, CS, DC, RES>
+impl<RD, WR, CS, DC, RES, PinError> Ssd1322 for Parallel8080<RD, WR, CS, DC, RES>
 where
     RD: OutputPin<Error = PinError>,
     WR: OutputPin<Error = PinError>,

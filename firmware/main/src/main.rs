@@ -7,7 +7,7 @@ use hal::{gpio, pac, prelude::*};
 use nb::block;
 use panic_halt as _;
 use ssd1322::{
-    AddressIncrement, Command, DisplayInterface, DisplayMode, GsDisplayQuality, Parallel8080,
+    AddressIncrement, Command, Ssd1322, DisplayMode, GsDisplayQuality, Parallel8080,
     ScanDirection, TransactionType, VslMode,
 };
 use stm32f4xx_hal as hal;
@@ -18,7 +18,7 @@ mod ssd1322;
 
 use led_strip::LedStrip;
 
-fn setup_display<T: DisplayInterface>(display: &mut T) -> Result<(), T::Error> {
+fn setup_display<T: Ssd1322>(display: &mut T) -> Result<(), T::Error> {
     display.command(Command::SetCommandLock(false))?;
     display.command(Command::SetDisplayOn(false))?;
     display.command(Command::SetClockDivAndOscFreq {
@@ -41,8 +41,8 @@ fn setup_display<T: DisplayInterface>(display: &mut T) -> Result<(), T::Error> {
         VslMode::External,
         GsDisplayQuality::Enhanced,
     ))?;
-    display.command(Command::SetContrastCurrent(0xff))?;
-    display.command(Command::MasterContrastCurrentControl(15))?;
+    display.command(Command::SetContrastCurrent(0x80))?;
+    display.command(Command::MasterContrastCurrentControl(8))?;
     display.command(Command::SetPhaseLength {
         phase_1_period: 2,
         phase_2_period: 15,
