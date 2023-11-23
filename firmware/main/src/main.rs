@@ -6,13 +6,58 @@ use cortex_m_rt::entry;
 use hal::{gpio, pac, prelude::*};
 use nb::block;
 use panic_halt as _;
-use ssd1322::{DisplayInterface, Parallel8080, TransactionType};
+use ssd1322::{
+    AddressIncrement, Command, DisplayInterface, DisplayMode, GsDisplayQuality, Parallel8080,
+    ScanDirection, TransactionType, VslMode,
+};
 use stm32f4xx_hal as hal;
 
 mod led_strip;
+mod print;
 mod ssd1322;
 
 use led_strip::LedStrip;
+
+fn setup_display<T: DisplayInterface>(display: &mut T) -> Result<(), T::Error> {
+    display.command(Command::SetCommandLock(false))?;
+    display.command(Command::SetDisplayOn(false))?;
+    display.command(Command::SetClockDivAndOscFreq {
+        clock_div: ssd1322::ClockDivide::DivBy2,
+        osc_freq: 16,
+    })?;
+    display.command(Command::SetMuxRatio(0x3f))?;
+    display.command(Command::SetStartLine(0))?;
+    display.command(Command::SetOffset(0))?;
+    display.command(Command::SetRemapMode {
+        address_increment: AddressIncrement::Horizontal,
+        column_address_remap: false,
+        nibble_remap: true,
+        scan_direction: ScanDirection::Downwards,
+        split_odd_even: false,
+        dual_com_line: true,
+    })?;
+    display.command(Command::VddFunctionSelect(ssd1322::VddMode::Internal))?;
+    display.command(Command::DisplayEnhancementA(
+        VslMode::External,
+        GsDisplayQuality::Enhanced,
+    ))?;
+    display.command(Command::SetContrastCurrent(0xff))?;
+    display.command(Command::MasterContrastCurrentControl(15))?;
+    display.command(Command::SetPhaseLength {
+        phase_1_period: 2,
+        phase_2_period: 15,
+    })?;
+
+    display.command(Command::SetPrechargeVoltage(13))?;
+    display.command(Command::SetVcomh(0))?;
+    display.command(Command::SetMode(DisplayMode::AllOff))?;
+
+    display.command(Command::SetDisplayOn(true))?;
+
+    display.command(Command::SetColumnAddress { start: 28, end: 91 })?;
+    display.command(Command::SetRowAddress { start: 0, end: 63 })?;
+    Ok(())
+}
 
 #[entry]
 fn main() -> ! {
@@ -31,6 +76,22 @@ fn main() -> ! {
     let gpioe = p.GPIOE.split();
     let dbg_led = gpiob.pb0.into_push_pull_output();
 
+
+    // setup uart println
+    let print_tx_pin = gpiob.pb10.into_alternate();
+    let mut print_tx = p
+        .USART3
+        .tx(
+            print_tx_pin,
+            hal::serial::Config::default()
+                .baudrate(115200.bps())
+                .wordlength_8()
+                .parity_none(),
+            &clocks,
+        )
+        .unwrap();
+    print::init(print_tx);
+
     let mut delay = p.TIM2.delay_ms(&clocks);
 
     let mut leds = LedStrip::new(
@@ -39,19 +100,6 @@ fn main() -> ! {
         gpioe.pe5.into_push_pull_output(),
     )
     .unwrap();
-
-    let tx_pin = gpiob.pb10.into_alternate();
-    let mut tx = p
-        .USART3
-        .tx(
-            tx_pin,
-            hal::serial::Config::default()
-                .baudrate(115200.bps())
-                .wordlength_8()
-                .parity_none(),
-            &clocks,
-        )
-        .unwrap();
 
     let mut i = 0;
 
@@ -63,77 +111,24 @@ fn main() -> ! {
         res: gpioc.pc12.into_push_pull_output(),
     };
 
-    // display.read(typ)
-
-    display.reset(&mut delay).unwrap();
     delay.delay_ms(100u8);
 
+    display.reset(&mut delay).unwrap();
 
-    // display.write(TransactionType::Command, 0xb3);
-    display.write(TransactionType::Command, 0xfd);
-    display.write(TransactionType::Data, 0x12);
+    setup_display(&mut display).unwrap();
 
-    display.write(TransactionType::Command, 0xae);
-
-    display.write(TransactionType::Command, 0xb3);
-    display.write(TransactionType::Data, 0xf1);
-
-    display.write(TransactionType::Command, 0xca);
-    display.write(TransactionType::Data, 0x3f);
-    
-    display.write(TransactionType::Command, 0xa2);
-    display.write(TransactionType::Data, 0);
-
-    display.write(TransactionType::Command, 0xa1);
-    display.write(TransactionType::Data, 0);
-
-    display.write(TransactionType::Command, 0xa0);
-    display.write(TransactionType::Data, 0x14);
-    display.write(TransactionType::Data, 0x11);
-
-    display.write(TransactionType::Command, 0xab);
-    display.write(TransactionType::Data, 1);
-
-    display.write(TransactionType::Command, 0xb4);
-    display.write(TransactionType::Data, 0xa0);
-    display.write(TransactionType::Data, 0xfd);
-
-    display.write(TransactionType::Command, 0xc1);
-    display.write(TransactionType::Data, 0xff);
-
-    display.write(TransactionType::Command, 0xc7);
-    display.write(TransactionType::Data, 0x0f);
-
-    display.write(TransactionType::Command, 0xb1);
-    display.write(TransactionType::Data, 0xf0);
-
-    display.write(TransactionType::Command, 0xd1);
-    display.write(TransactionType::Data, 0x82);
-    display.write(TransactionType::Data, 0x20);
-
-    display.write(TransactionType::Command, 0xbb);
-    display.write(TransactionType::Data, 0x0d);
-
-    display.write(TransactionType::Command, 0xbe);
-    display.write(TransactionType::Data, 0x00);
-
-    display.write(TransactionType::Command, 0xa6);
-
-    display.write(TransactionType::Command, 0xaf);
-
-
-    display.write(TransactionType::Command, 0x15);
-    display.write(TransactionType::Data, 0x1c);
-    display.write(TransactionType::Data, 0x5b);
-
-    display.write(TransactionType::Command, 0x75);
-    display.write(TransactionType::Data, 0);
-    display.write(TransactionType::Data, 63);
-
-    display.write(TransactionType::Command, 0x5c);
-
-    for i in 0..(7556*2) {
-        display.write(TransactionType::Data, (i&0x0f) as u8);
+    display.command(Command::WriteRam);
+    for i in 0..118 {
+        for y in 0..64 {
+            for x2 in 0..128 {
+                if y > 10 && y < 20 && x2 > i && x2 < (i + 10) {
+                    display.write(TransactionType::Data, 0xff);
+                } else {
+                    display.write(TransactionType::Data, 0x00);
+                }
+            }
+        }
+        // delay.delay_ms(10u32);
     }
 
     // display.write_8080(TransactionType::Command, 0xa4, &mut delay);
@@ -186,8 +181,7 @@ fn main() -> ! {
         leds.write_u16(1 << i);
         leds.latch_output();
 
-        // block!(rx.read()).unwrap();
-        writeln!(tx, "Test {i}").unwrap();
+        println!("wowza{}", i);
 
         i += 1;
         if i >= 16 {

@@ -3,10 +3,11 @@ name = "main"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+lto = "fat"
 
 [dependencies]
-cortex-m = {version = "0.7.7", features = ["inline-asm"]}
+cortex-m = { version = "0.7.7", features = ["inline-asm"] }
 cortex-m-rt = "0.7.3"
 panic-halt = "0.2.0"
 stm32f4 = "0.15.1"
