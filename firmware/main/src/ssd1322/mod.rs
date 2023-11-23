@@ -2,6 +2,11 @@ mod parallel8080;
 
 pub use parallel8080::Parallel8080;
 
+use crate::println;
+
+
+// https://github.com/presslab-us/fbtft/blob/f59e71cf7f8a0c717fcb0d6220e12ae2939205f4/fb_ssd1322.c
+
 pub trait CycleDelay {
     fn delay_cycles(cycles: usize);
 }
@@ -62,7 +67,7 @@ pub trait DisplayInterface {
             }
             Command::ExitPartialDisplay => self.raw_command(0xa9, &[]),
             Command::VddFunctionSelect(mode) => self.raw_command(0xab, &[mode as u8]),
-            Command::SetDisplayOn(enable) => self.raw_command(0xae | ((!enable) as u8), &[]),
+            Command::SetDisplayOn(enable) => self.raw_command(0xae | ((enable) as u8), &[]),
             Command::SetPhaseLength {
                 phase_1_period,
                 phase_2_period,
@@ -79,7 +84,7 @@ pub trait DisplayInterface {
             ),
             Command::DisplayEnhancementA(vsl, quality) => {
                 self.raw_command(0xb4, &[0xa0 | (vsl as u8), 0x05 | ((quality as u8) << 3)])
-            }
+                }
             Command::SetGpio { gpio_0, gpio_1 } => {
                 self.raw_command(0xb6, &[(gpio_0 as u8) | ((gpio_1 as u8) << 2)])
             }
@@ -91,7 +96,7 @@ pub trait DisplayInterface {
             Command::SetContrastCurrent(contrast) => self.raw_command(0xc1, &[contrast]),
             Command::MasterContrastCurrentControl(cc) => self.raw_command(0xc7, &[cc & 0x0f]),
             Command::SetMuxRatio(ratio) => self.raw_command(0xca, &[ratio & 0x7f]),
-            Command::SetCommandLock(lock) => self.raw_command(0xfd, &[0x12 & ((lock as u8) << 2)]),
+            Command::SetCommandLock(lock) => self.raw_command(0xfd, &[0x12 | ((lock as u8) << 2)]),
         }
     }
 }

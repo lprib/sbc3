@@ -50,7 +50,7 @@ fn setup_display<T: DisplayInterface>(display: &mut T) -> Result<(), T::Error> {
 
     display.command(Command::SetPrechargeVoltage(13))?;
     display.command(Command::SetVcomh(0))?;
-    display.command(Command::SetMode(DisplayMode::AllOff))?;
+    display.command(Command::SetMode(DisplayMode::Normal))?;
 
     display.command(Command::SetDisplayOn(true))?;
 
