@@ -1,14 +1,19 @@
 #![no_main]
 #![no_std]
 
-use core::fmt::Write;
+use core::cell::OnceCell;
+
 use cortex_m_rt::entry;
-use hal::{gpio, pac, prelude::*};
-use nb::block;
+use hal::{pac, prelude::*};
+use libui::{display_device::DisplayDevice, pixel_buffer::PixelBuffer, Rect};
+use num_traits::real::Real;
 use panic_halt as _;
 use ssd1322::{
-    AddressIncrement, Command, Ssd1322, DisplayMode, GsDisplayQuality, Parallel8080,
-    ScanDirection, TransactionType, VslMode,
+    commands::{
+        AddressIncrement, ClockDivide, Command, DisplayMode, GsDisplayQuality, ScanDirection,
+        VddMode, VslMode,
+    },
+    Parallel8080, Ssd1322, TransactionType,
 };
 use stm32f4xx_hal as hal;
 
@@ -18,11 +23,14 @@ mod ssd1322;
 
 use led_strip::LedStrip;
 
+static mut underlying_pixel_buffer: [u8; 256 * 64] = [0; { 256 * 64 }];
+static mut pixel_buffer: OnceCell<PixelBuffer> = OnceCell::new();
+
 fn setup_display<T: Ssd1322>(display: &mut T) -> Result<(), T::Error> {
     display.command(Command::SetCommandLock(false))?;
     display.command(Command::SetDisplayOn(false))?;
     display.command(Command::SetClockDivAndOscFreq {
-        clock_div: ssd1322::ClockDivide::DivBy2,
+        clock_div: ClockDivide::DivBy2,
         osc_freq: 16,
     })?;
     display.command(Command::SetMuxRatio(0x3f))?;
@@ -36,7 +44,7 @@ fn setup_display<T: Ssd1322>(display: &mut T) -> Result<(), T::Error> {
         split_odd_even: false,
         dual_com_line: true,
     })?;
-    display.command(Command::VddFunctionSelect(ssd1322::VddMode::Internal))?;
+    display.command(Command::VddFunctionSelect(VddMode::Internal))?;
     display.command(Command::DisplayEnhancementA(
         VslMode::External,
         GsDisplayQuality::Enhanced,
@@ -61,6 +69,12 @@ fn setup_display<T: Ssd1322>(display: &mut T) -> Result<(), T::Error> {
 
 #[entry]
 fn main() -> ! {
+    unsafe {
+        pixel_buffer
+            .set(PixelBuffer::new(&mut underlying_pixel_buffer, 256, 64, 256))
+            .unwrap();
+    }
+
     let p = pac::Peripherals::take().unwrap();
     let rcc = p.RCC.constrain();
     let clocks = rcc
@@ -75,7 +89,6 @@ fn main() -> ! {
     let _ = p.GPIOD.split();
     let gpioe = p.GPIOE.split();
     let dbg_led = gpiob.pb0.into_push_pull_output();
-
 
     // setup uart println
     let print_tx_pin = gpiob.pb10.into_alternate();
@@ -117,75 +130,41 @@ fn main() -> ! {
 
     setup_display(&mut display).unwrap();
 
-    display.command(Command::WriteRam);
-    for i in 0..118 {
-        for y in 0..64 {
-            for x2 in 0..128 {
-                if y > 10 && y < 20 && x2 > i && x2 < (i + 10) {
-                    display.write(TransactionType::Data, 0xff);
-                } else {
-                    display.write(TransactionType::Data, 0x00);
-                }
-            }
-        }
+    display.command(Command::WriteRam).unwrap();
+
+    for i in 1..100 {
+        // unsafe {
+        //     let rect = Rect::xywh(i * 2, i, 10, 10);
+        //     pixel_buffer.get_mut().unwrap().clear(0);
+        //     pixel_buffer.get_mut().unwrap().rect(rect, 15);
+        //     display.refresh(
+        //         pixel_buffer.get().unwrap(),
+        //         // rect
+        //         rect.with_offset(1), // pixel_buffer.get().unwrap().all(),
+        //     );
+        //     // println!("{:?}", rect.outset(1).best_fit_x(4));
+        // }
         // delay.delay_ms(10u32);
     }
+    leds.write_u16(0);
 
-    // display.write_8080(TransactionType::Command, 0xa4, &mut delay);
-
-    // display.write_8080(TransactionType::Command, 0xa2, &mut delay);
-    // display.write_8080(TransactionType::Data, 100, &mut delay);
-
-    // display.write_8080(TransactionType::Command, 0x5c, &mut delay);
-    // for i in 0..15000
-    // {
-    //     display.write_8080(TransactionType::Data, 0x55, &mut delay);
-    // }
-
-    // delay.delay_us(100_000u32);
-    // display.write(TransactionType::Command, 0xaf).unwrap();
-    // delay.delay_us(100_000u32);
-    // display.write(TransactionType::Command, 0xa4).unwrap();
-    // delay.delay_us(100_000u32);
-
-    // display.write(TransactionType::Command, 0x5c).unwrap();
-    // delay.delay_us(100_000u32);
-    // for i in 0..65535
-    // {
-    //     display.write(TransactionType::Data, 0).unwrap();
-    // }
-
-    // display.write(TransactionType::Command, 0x15).unwrap();
-    // delay.delay_us(100_000u32);
-
-    // display.write(TransactionType::Data, 0).unwrap();
-    // delay.delay_us(100_000u32);
-    // display.write(TransactionType::Data, 119).unwrap();
-    // delay.delay_us(100_000u32);
-
-    // display.write(TransactionType::Command, 0x5d).unwrap();
-    // delay.delay_us(100_000u32);
-    // let a = display.read(TransactionType::Data).unwrap();
-    // delay.delay_us(100_000u32);
-    // let b = display.read(TransactionType::Data).unwrap();
-    // delay.delay_us(100_000u32);
-    // let c = display.read(TransactionType::Data).unwrap();
-    // delay.delay_us(100_000u32);
-
-    // writeln!(tx, "Got {a} {b} {c}");
+    unsafe {
+        display.refresh(
+            pixel_buffer.get_mut().unwrap(),
+            pixel_buffer.get().unwrap().all(),
+        );
+    }
 
     loop {
-        delay.delay_us(200_000u32);
-        delay.delay_us(200_000u32);
-
-        leds.write_u16(1 << i);
-        leds.latch_output();
-
-        println!("wowza{}", i);
-
-        i += 1;
-        if i >= 16 {
-            i = 0;
+        for i in 0..255 {
+            let t = (i as f32) / 255.0 * 2.0 * core::f32::consts::PI;
+            let x = t.sin() * 100.0 + 128.0;
+            let pb = unsafe { pixel_buffer.get_mut().unwrap() };
+            pb.clear(3);
+            let r = Rect::xywh(x as i32, 28, 10, 10);
+            pb.rect(r, 15);
+            display.refresh(pb, r.with_offset(5));
+            delay.delay_ms(10u32);
         }
     }
 }

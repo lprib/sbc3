@@ -12,7 +12,11 @@
             "problemMatcher": [
                 "$rustc"
             ],
-            "group": "build"
+            "group": "build",
+            "presentation": {
+                "showReuseMessage": false,
+                "revealProblems": "onProblem"
+            }
         }
     ]
 }

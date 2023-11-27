@@ -1,7 +1,7 @@
 use stm32f4::stm32f405::GPIOD;
 use stm32f4xx_hal::hal::{blocking::delay::DelayMs, digital::v2::*};
 
-use super::{Ssd1322, TransactionType};
+use super::{commands::*, Ssd1322, TransactionType};
 
 fn dc_state(txn_type: TransactionType) -> PinState {
     match txn_type {
@@ -128,25 +128,6 @@ where
         Ok(())
     }
 
-    fn write_data(&mut self, data: &[u8]) -> Result<(), Self::Error> {
-        Self::set_data_bus_output();
-        self.dc.set_state(dc_state(TransactionType::Data))?;
-        self.cs.set_low()?;
-        cortex_m::asm::delay(11);
-
-        for &b in data {
-            self.wr.set_low()?;
-            Self::write_data_bus(b);
-            cortex_m::asm::delay(25); // t_cycle/2 => 150ns
-            self.wr.set_high()?;
-            cortex_m::asm::delay(25);
-        }
-
-        self.cs.set_high()?;
-
-        Ok(())
-    }
-
     fn read(&mut self, txn_type: TransactionType) -> Result<u8, Self::Error> {
         Self::set_data_bus_input();
         self.dc.set_state(dc_state(txn_type))?;
@@ -166,5 +147,106 @@ where
         self.cs.set_high()?;
 
         Ok(data)
+    }
+
+    fn multi_write_begin(&mut self) -> Result<(), Self::Error> {
+        Self::set_data_bus_output();
+        self.dc.set_state(dc_state(TransactionType::Data))?;
+        self.cs.set_low()?;
+        cortex_m::asm::delay(11);
+        Ok(())
+    }
+
+    fn multi_write_byte(&mut self, data: u8) -> Result<(), Self::Error> {
+        self.wr.set_low()?;
+        Self::write_data_bus(data);
+        // still works without delay...
+        // cortex_m::asm::delay(25); // t_cycle/2 => 150ns
+        self.wr.set_high()?;
+        // cortex_m::asm::delay(25);
+        Ok(())
+    }
+
+    fn multi_write_end(&mut self) -> Result<(), Self::Error> {
+        self.cs.set_high()?;
+        Ok(())
+    }
+
+    fn raw_command(&mut self, command: u8, args: &[u8]) -> Result<(), Self::Error> {
+        self.write(TransactionType::Command, command)?;
+        for &arg in args {
+            self.write(TransactionType::Data, arg)?;
+        }
+        Ok(())
+    }
+
+    fn command(&mut self, command: Command) -> Result<(), Self::Error> {
+        match command {
+            Command::EnableGrayScaleTable => self.raw_command(0x00, &[]),
+            Command::SetColumnAddress { start, end } => {
+                self.raw_command(0x15, &[start & 0x7f, end & 0x7f])
+            }
+            Command::WriteRam => self.raw_command(0x5c, &[]),
+            Command::ReadRam => self.raw_command(0x5d, &[]),
+            Command::SetRowAddress { start, end } => {
+                self.raw_command(0x75, &[start & 0x7f, end & 0x7f])
+            }
+            Command::SetRemapMode {
+                address_increment,
+                column_address_remap,
+                nibble_remap,
+                scan_direction,
+                split_odd_even,
+                dual_com_line,
+            } => self.raw_command(
+                0xa0,
+                &[
+                    (address_increment as u8)
+                        | ((column_address_remap as u8) << 1)
+                        | ((nibble_remap as u8) << 2)
+                        | ((scan_direction as u8) << 4)
+                        | ((split_odd_even as u8) << 5),
+                    0x01 | ((dual_com_line as u8) << 4),
+                ],
+            ),
+            Command::SetStartLine(n) => self.raw_command(0xa1, &[n & 0x7f]),
+            Command::SetOffset(n) => self.raw_command(0xa2, &[n & 0x7f]),
+            Command::SetMode(mode) => self.raw_command(0xa0 | (mode as u8), &[]),
+            Command::EnablePartialDisplay { start, end } => {
+                self.raw_command(0xa8, &[start & 0x7f, end & 0x7f])
+            }
+            Command::ExitPartialDisplay => self.raw_command(0xa9, &[]),
+            Command::VddFunctionSelect(mode) => self.raw_command(0xab, &[mode as u8]),
+            Command::SetDisplayOn(enable) => self.raw_command(0xae | ((enable) as u8), &[]),
+            Command::SetPhaseLength {
+                phase_1_period,
+                phase_2_period,
+            } => self.raw_command(
+                0xb1,
+                &[(phase_1_period & 0x0f) | ((phase_2_period & 0x0f) << 4)],
+            ),
+            Command::SetClockDivAndOscFreq {
+                clock_div,
+                osc_freq,
+            } => self.raw_command(
+                0xb3,
+                &[((clock_div as u8) & 0x0f) | ((osc_freq & 0x0f) << 4)],
+            ),
+            Command::DisplayEnhancementA(vsl, quality) => {
+                self.raw_command(0xb4, &[0xa0 | (vsl as u8), 0x05 | ((quality as u8) << 3)])
+            }
+            Command::SetGpio { gpio_0, gpio_1 } => {
+                self.raw_command(0xb6, &[(gpio_0 as u8) | ((gpio_1 as u8) << 2)])
+            }
+            Command::SetSecondPrechargePeriod(period) => self.raw_command(0xb6, &[period & 0x0f]),
+            Command::SetGrayScaleTable(table) => self.raw_command(0xb8, &table),
+            Command::SetDefaultGrayScaleTable => self.raw_command(0xb9, &[]),
+            Command::SetPrechargeVoltage(voltage) => self.raw_command(0xbb, &[voltage & 0x1f]),
+            Command::SetVcomh(vcomh) => self.raw_command(0xbe, &[vcomh & 0x07]),
+            Command::SetContrastCurrent(contrast) => self.raw_command(0xc1, &[contrast]),
+            Command::MasterContrastCurrentControl(cc) => self.raw_command(0xc7, &[cc & 0x0f]),
+            Command::SetMuxRatio(ratio) => self.raw_command(0xca, &[ratio & 0x7f]),
+            Command::SetCommandLock(lock) => self.raw_command(0xfd, &[0x12 | ((lock as u8) << 2)]),
+        }
     }
 }

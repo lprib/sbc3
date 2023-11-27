@@ -1,26 +1,76 @@
+pub mod commands;
 mod parallel8080;
 
 pub use parallel8080::Parallel8080;
 
-use crate::println;
+use libui::{display_device::DisplayDevice, pixel_buffer::PixelBuffer, Rect};
+use stm32f4xx_hal::hal::digital::v2::OutputPin;
 
+use self::commands::Command;
 
 // https://github.com/presslab-us/fbtft/blob/f59e71cf7f8a0c717fcb0d6220e12ae2939205f4/fb_ssd1322.c
-
-pub trait CycleDelay {
-    fn delay_cycles(cycles: usize);
-}
 
 pub enum TransactionType {
     Data,
     Command,
 }
 
+// TODO(liam): This impl only relies on interfaces in trait Ssd1322 (generic
+// over all interfaces). However we cannot blankey impl DisplayDevice as it's
+// from another crate :(.
+impl<RD, WR, CS, DC, RES, PinError> DisplayDevice for Parallel8080<RD, WR, CS, DC, RES>
+where
+    RD: OutputPin<Error = PinError>,
+    WR: OutputPin<Error = PinError>,
+    CS: OutputPin<Error = PinError>,
+    DC: OutputPin<Error = PinError>,
+    RES: OutputPin<Error = PinError>,
+{
+    type Error = PinError;
+
+    fn refresh(&mut self, buf: &PixelBuffer, area: Rect) -> Result<(), Self::Error> {
+        let area = area.best_fit_x(4);
+
+        self.command(Command::SetColumnAddress {
+            start: (<Self as Ssd1322>::COL_START + area.x as usize / 4) as u8,
+            end: (<Self as Ssd1322>::COL_START + (area.x + area.w) as usize / 4 - 1) as u8,
+        })?;
+
+        self.command(Command::SetRowAddress {
+            start: (<Self as Ssd1322>::ROW_START + area.y as usize) as u8,
+            end: (<Self as Ssd1322>::ROW_START + (area.y + area.h) as usize) as u8,
+        })?;
+
+        self.command(Command::WriteRam)?;
+
+        self.multi_write_begin()?;
+        for y in area.y..(area.y + area.h) {
+            for x in (area.x..(area.x + area.w)).step_by(4) {
+                let first_byte = (buf.at(x + 0, y) << 4) | buf.at(x + 1, y);
+                let second_byte = (buf.at(x + 2, y) << 4) | buf.at(x + 3, y);
+                self.multi_write_byte(first_byte)?;
+                self.multi_write_byte(second_byte)?;
+            }
+        }
+        self.multi_write_end()?;
+        Ok(())
+    }
+}
+
 pub trait Ssd1322 {
     type Error;
+
+    const COL_START: usize = 28;
+    const COL_END: usize = 92;
+    const ROW_START: usize = 0;
+    const ROW_END: usize = 64;
+
     fn write(&mut self, txn_type: TransactionType, data: u8) -> Result<(), Self::Error>;
-    fn write_data(&mut self, data: &[u8]) -> Result<(), Self::Error>;
     fn read(&mut self, txn_type: TransactionType) -> Result<u8, Self::Error>;
+
+    fn multi_write_begin(&mut self) -> Result<(), Self::Error>;
+    fn multi_write_byte(&mut self, data: u8) -> Result<(), Self::Error>;
+    fn multi_write_end(&mut self) -> Result<(), Self::Error>;
 
     fn raw_command(&mut self, command: u8, args: &[u8]) -> Result<(), Self::Error> {
         self.write(TransactionType::Command, command)?;
@@ -84,7 +134,7 @@ pub trait Ssd1322 {
             ),
             Command::DisplayEnhancementA(vsl, quality) => {
                 self.raw_command(0xb4, &[0xa0 | (vsl as u8), 0x05 | ((quality as u8) << 3)])
-                }
+            }
             Command::SetGpio { gpio_0, gpio_1 } => {
                 self.raw_command(0xb6, &[(gpio_0 as u8) | ((gpio_1 as u8) << 2)])
             }
@@ -99,113 +149,4 @@ pub trait Ssd1322 {
             Command::SetCommandLock(lock) => self.raw_command(0xfd, &[0x12 | ((lock as u8) << 2)]),
         }
     }
-}
-
-pub enum Command {
-    EnableGrayScaleTable,
-    SetColumnAddress {
-        start: u8,
-        end: u8,
-    },
-    WriteRam,
-    ReadRam,
-    SetRowAddress {
-        start: u8,
-        end: u8,
-    },
-    SetRemapMode {
-        address_increment: AddressIncrement,
-        column_address_remap: bool,
-        nibble_remap: bool,
-        scan_direction: ScanDirection,
-        split_odd_even: bool,
-        dual_com_line: bool,
-    },
-    SetStartLine(u8),
-    SetOffset(u8),
-    SetMode(DisplayMode),
-    EnablePartialDisplay {
-        start: u8,
-        end: u8,
-    },
-    ExitPartialDisplay,
-    VddFunctionSelect(VddMode),
-    SetDisplayOn(bool),
-    SetPhaseLength {
-        phase_1_period: u8,
-        phase_2_period: u8,
-    },
-    SetClockDivAndOscFreq {
-        clock_div: ClockDivide,
-        // todo no docs on osc freq?
-        osc_freq: u8,
-    },
-    DisplayEnhancementA(VslMode, GsDisplayQuality),
-    SetGpio {
-        gpio_0: GpioMode,
-        gpio_1: GpioMode,
-    },
-    SetSecondPrechargePeriod(u8),
-    // TODO this will make struct phat?
-    SetGrayScaleTable([u8; 16]),
-    SetDefaultGrayScaleTable,
-    SetPrechargeVoltage(u8),
-    SetVcomh(u8),
-    SetContrastCurrent(u8),
-    MasterContrastCurrentControl(u8),
-    SetMuxRatio(u8),
-    SetCommandLock(bool),
-}
-
-pub enum AddressIncrement {
-    Horizontal = 0,
-    Vertical = 1,
-}
-
-pub enum ScanDirection {
-    Upwards = 0,
-    Downwards = 1,
-}
-
-pub enum DisplayMode {
-    AllOff = 4,
-    AllOn = 5,
-    Normal = 6,
-    Inverse = 7,
-}
-
-pub enum VddMode {
-    External = 0,
-    Internal = 1,
-}
-
-pub enum ClockDivide {
-    DivBy1 = 0,
-    DivBy2 = 1,
-    DivBy4 = 2,
-    DivBy8 = 3,
-    DivBy16 = 4,
-    DivBy32 = 5,
-    DivBy64 = 6,
-    DivBy128 = 7,
-    DivBy256 = 8,
-    DivBy512 = 9,
-    DivBy1024 = 10,
-}
-
-pub enum VslMode {
-    External = 0,
-    Internal = 2,
-}
-
-pub enum GsDisplayQuality {
-    Normal = 0b10110,
-    Enhanced = 0b11111,
-}
-
-pub enum GpioMode {
-    HighZInputDisabled = 0,
-    HighZInputEnabled = 1,
-    OutputLow = 2,
-    OutputHigh = 3,
 }

@@ -1,10 +1,7 @@
 use core::{cell::OnceCell, fmt};
 
 use stm32f4::stm32f405::USART3;
-use stm32f4xx_hal::{
-    pac::Peripherals,
-    serial::{SerialExt, Tx},
-};
+use stm32f4xx_hal::serial::Tx;
 
 #[macro_export]
 macro_rules! println {
