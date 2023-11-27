@@ -30,8 +30,8 @@ fn setup_display<T: Ssd1322>(display: &mut T) -> Result<(), T::Error> {
     display.command(Command::SetCommandLock(false))?;
     display.command(Command::SetDisplayOn(false))?;
     display.command(Command::SetClockDivAndOscFreq {
-        clock_div: ClockDivide::DivBy2,
-        osc_freq: 16,
+        clock_div: ClockDivide::DivBy1,
+        osc_freq: 1,
     })?;
     display.command(Command::SetMuxRatio(0x3f))?;
     display.command(Command::SetStartLine(0))?;
@@ -147,24 +147,42 @@ fn main() -> ! {
         // delay.delay_ms(10u32);
     }
     leds.write_u16(0);
+    leds.latch_output();
 
     unsafe {
-        display.refresh(
-            pixel_buffer.get_mut().unwrap(),
-            pixel_buffer.get().unwrap().all(),
-        );
+        let pb = pixel_buffer.get_mut().unwrap();
+        for i in 0..16 {
+            for hl in 0..10 {
+                pb.vline(i*10+hl, 5, 59, i as u8);
+            }
+            // pb.rect(
+            //     Rect {
+            //         x: i * 10,
+            //         y: 0,
+            //         w: 10,
+            //         h: 64,
+            //     },
+            //     i as u8,
+            // );
+        }
+        display.refresh(pb, pb.all());
     }
 
     loop {
-        for i in 0..255 {
-            let t = (i as f32) / 255.0 * 2.0 * core::f32::consts::PI;
-            let x = t.sin() * 100.0 + 128.0;
-            let pb = unsafe { pixel_buffer.get_mut().unwrap() };
-            pb.clear(3);
-            let r = Rect::xywh(x as i32, 28, 10, 10);
-            pb.rect(r, 15);
-            display.refresh(pb, r.with_offset(5));
-            delay.delay_ms(10u32);
-        }
+        // for i in 0..255 {
+        //     let pb = unsafe { pixel_buffer.get_mut().unwrap() };
+        //     pb.clear(0);
+
+        //     for which in 0..45 {
+        //         let t = ((i + 5*which) as f32) / 255.0 * 2.0 * core::f32::consts::PI;
+        //         // for which in 0..5;
+        //         let x = t.sin() * 100.0 + 128.0;
+        //         let r = Rect::xywh(x as i32, which + 4, 5, 5);
+        //         pb.rect(r, (which/3) as u8);
+        //         display.refresh(pb, r.with_offset(3));
+        //     }
+
+        //     // delay.delay_ms(3u32);
+        // }
     }
 }
