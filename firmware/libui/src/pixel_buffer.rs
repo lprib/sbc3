@@ -2,7 +2,7 @@ use crate::Rect;
 
 #[derive(Debug)]
 pub struct PixelBuffer<'a> {
-    buf: &'a mut [u8],
+    pub buf: &'a mut [u8],
     /// width (px)
     w: usize,
     /// height (px)
@@ -12,7 +12,7 @@ pub struct PixelBuffer<'a> {
 }
 
 impl<'a> PixelBuffer<'a> {
-    pub fn new(buf: &'a mut [u8], w: usize, h: usize, stride: usize) -> Self {
+    pub fn new(buf: &'a mut [u8], w: usize, h: usize, stride: usize) -> PixelBuffer<'a> {
         // note: buffer must have stride == w_px
         Self { buf, w, h, stride }
     }
