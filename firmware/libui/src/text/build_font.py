@@ -5,11 +5,22 @@ import math
 def rindex(lst, value):
     return len(lst) - 1 - lst[::-1].index(value)
 
+
+SPACE_WIDTH = 2
+
 class Glyph:
     def __init__(self, atlas, char):
         self.char = char
         self.ascii = ord(char)
         assert self.ascii < 128
+
+        if char == ' ':
+            self.stride_bytes = 0
+            self.sprite = []
+            self.origin_y_offset = 0
+            self.next_char_offset_x = SPACE_WIDTH + 1
+            return
+
 
         # font input is 16 sections wide, 8 high.
         # indexed by ascii value in reading direction

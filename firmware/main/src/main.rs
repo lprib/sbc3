@@ -5,7 +5,7 @@ use core::cell::OnceCell;
 
 use cortex_m_rt::entry;
 use hal::{pac, prelude::*};
-use libui::{display_device::DisplayDevice, pixel_buffer::PixelBuffer, Rect};
+use libui::{display_device::DisplayDevice, pixel_buffer::PixelBuffer, Rect, text::NORMAL_FONT};
 use num_traits::real::Real;
 use panic_halt as _;
 use ssd1322::{
@@ -151,10 +151,12 @@ fn main() -> ! {
 
     unsafe {
         let pb = pixel_buffer.get_mut().unwrap();
-        for i in 0..16 {
-            for hl in 0..10 {
-                pb.vline(i*10+hl, 5, 59, i as u8);
-            }
+        NORMAL_FONT.draw(pb, "The quick brown fox jumped over the lazy dog!", 0, 8, 15);
+        NORMAL_FONT.draw(pb, "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG!", 0, 20, 15);
+        // for i in 0..16 {
+        //     for hl in 0..10 {
+        //         pb.vline(i*10+hl, 5, 59, i as u8);
+        //     }
             // pb.rect(
             //     Rect {
             //         x: i * 10,
@@ -164,7 +166,7 @@ fn main() -> ! {
             //     },
             //     i as u8,
             // );
-        }
+        // }
         display.refresh(pb, pb.all());
     }
 

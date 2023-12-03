@@ -2,7 +2,7 @@
 
 pub mod display_device;
 pub mod pixel_buffer;
-mod text;
+pub mod text;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Rect {

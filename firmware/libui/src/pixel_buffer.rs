@@ -1,6 +1,14 @@
 use crate::Rect;
 
 #[derive(Debug)]
+pub struct MonochomeSpriteRef<'a> {
+    pub width: u8,
+    pub height: u8,
+    pub stride: u8,
+    pub data: &'a [u8],
+}
+
+#[derive(Debug)]
 pub struct PixelBuffer<'a> {
     pub buf: &'a mut [u8],
     /// width (px)
@@ -24,10 +32,6 @@ impl<'a> PixelBuffer<'a> {
             w: self.w as i32,
             h: self.h as i32,
         }
-    }
-
-    const fn max_color(px_per_byte: usize) -> u8 {
-        1 << (8 / px_per_byte) - 1
     }
 
     pub fn hline(&mut self, x1: i32, x2: i32, y: i32, color: u8) {
@@ -55,6 +59,29 @@ impl<'a> PixelBuffer<'a> {
 
     pub fn at(&self, x: i32, y: i32) -> u8 {
         self.buf[(y * self.stride as i32 + x) as usize]
+    }
+
+    pub fn at_mut(&mut self, x: i32, y: i32) -> &mut u8 {
+        &mut self.buf[(y * self.stride as i32 + x) as usize]
+    }
+
+    pub fn blit_monochrome(&mut self, sprite_ref: &MonochomeSpriteRef, x: i32, y: i32, color: u8) {
+        'row_loop: for y_iter in 0..sprite_ref.height {
+            for byte_idx in 0..sprite_ref.stride {
+                for bit_idx in 0..8 {
+                    let x_iter = (byte_idx as i32) * 8 + bit_idx;
+
+                    if x_iter >= sprite_ref.width as i32 {
+                        continue 'row_loop;
+                    }
+
+                    let px = self.at_mut(x + x_iter, y + (y_iter as i32));
+                    let bit = sprite_ref.data[(y_iter * sprite_ref.stride + byte_idx) as usize]
+                        & 1 << bit_idx;
+                    *px = if bit != 0 { color } else { 0 };
+                }
+            }
+        }
     }
 }
 

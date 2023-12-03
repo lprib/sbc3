@@ -1,5 +1,8 @@
-use libui::{pixel_buffer::PixelBuffer, Rect};
-use pixels::{Pixels, SurfaceTexture, wgpu::Color};
+use libui::{
+    pixel_buffer::{MonochomeSpriteRef, PixelBuffer},
+    Rect, text::NORMAL_FONT,
+};
+use pixels::{wgpu::Color, Pixels, SurfaceTexture};
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -32,11 +35,21 @@ const COLOR_LOOKUP: [[u8; 4]; 16] = [
     [255, 215, 0, 0xff],
 ];
 
+const SPRITE_DATA: [u8; 8] = [
+    0b00111100, 0b01000010, 0b10100101, 0b10000001, 0b10100101, 0b10011001, 0b01000010, 0b00111100,
+];
+
 fn draw(pb: &mut PixelBuffer) {
-    for p in pb.buf.iter_mut() {
-        *p = 1;
-    }
+    let sprite = MonochomeSpriteRef {
+        width: 8,
+        height: 8,
+        stride: 1,
+        data: &SPRITE_DATA,
+    };
+    pb.blit_monochrome(&sprite, 12, 1, 8);
     pb.rect(Rect::xywh(1, 1, 10, 10), 15);
+
+    NORMAL_FONT.draw(pb, "The quick Brown fox Jumped! ?? @", 0, 30, 15);
 }
 
 fn main() {
@@ -66,31 +79,33 @@ fn main() {
 
     pixels.clear_color(Color::WHITE);
 
-    event_loop.run(move |event, elwt| {
-        if let Event::WindowEvent { window_id, event } = &event {
-            if *window_id == window.id() {
-                match event {
-                    WindowEvent::RedrawRequested => {
-                        for (i, pixel) in pixels.frame_mut().chunks_exact_mut(4).enumerate() {
-                            let gray = pb.buf[i];
-                            let gray = if gray > 0xf { 0xf } else { gray };
-                            let rgba = COLOR_LOOKUP[gray as usize];
-                            pixel.copy_from_slice(&rgba);
+    event_loop
+        .run(move |event, elwt| {
+            if let Event::WindowEvent { window_id, event } = &event {
+                if *window_id == window.id() {
+                    match event {
+                        WindowEvent::RedrawRequested => {
+                            for (i, pixel) in pixels.frame_mut().chunks_exact_mut(4).enumerate() {
+                                let gray = pb.buf[i];
+                                let gray = if gray > 0xf { 0xf } else { gray };
+                                let rgba = COLOR_LOOKUP[gray as usize];
+                                pixel.copy_from_slice(&rgba);
+                            }
+                            pixels.render();
                         }
-                        pixels.render();
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
-        }
-        if input.update(&event) {
-            if input.close_requested() {
-                elwt.exit();
+            if input.update(&event) {
+                if input.close_requested() {
+                    elwt.exit();
+                }
+                if let Some(size) = input.window_resized() {
+                    pixels.resize_surface(size.width, size.height).unwrap();
+                }
+                window.request_redraw();
             }
-            if let Some(size) = input.window_resized() {
-                pixels.resize_surface(size.width, size.height).unwrap();
-            }
-            window.request_redraw();
-        }
-    }).unwrap();
+        })
+        .unwrap();
 }
