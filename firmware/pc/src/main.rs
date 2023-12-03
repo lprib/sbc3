@@ -1,5 +1,5 @@
 use libui::{pixel_buffer::PixelBuffer, Rect};
-use pixels::{Pixels, SurfaceTexture};
+use pixels::{Pixels, SurfaceTexture, wgpu::Color};
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -63,6 +63,8 @@ fn main() {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
     };
+
+    pixels.clear_color(Color::WHITE);
 
     event_loop.run(move |event, elwt| {
         if let Event::WindowEvent { window_id, event } = &event {
