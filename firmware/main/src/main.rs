@@ -153,6 +153,7 @@ fn main() -> ! {
         let pb = pixel_buffer.get_mut().unwrap();
         NORMAL_FONT.draw(pb, "The quick brown fox jumped over the lazy dog!", 0, 8, 15);
         NORMAL_FONT.draw(pb, "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG!", 0, 20, 15);
+        NORMAL_FONT.draw(pb, "0123456789 !@#$%^&*(){}[],./;'<>?:\"\\|", 0, 32, 15);
         // for i in 0..16 {
         //     for hl in 0..10 {
         //         pb.vline(i*10+hl, 5, 59, i as u8);
