@@ -12,4 +12,4 @@ gen_m:
 clean:
 	rm -rf build
 
-.PHONY: all clean
+.PHONY: all clean main gen gen_m
