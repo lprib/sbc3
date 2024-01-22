@@ -98,6 +98,10 @@ target_include_directories(stm32f4xx_hal
 PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/Inc
 )
+target_compile_options(stm32f4xx_hal
+PRIVATE
+    -Os
+)
 
 target_link_libraries(stm32f4xx_hal
 PUBLIC

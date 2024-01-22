@@ -7,6 +7,10 @@ PRIVATE
 )
 
 target_link_libraries(app stm32f4xx_hal)
+target_compile_options(app
+PRIVATE
+    -Os
+)
 
 set(LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/STM32F405VGTx_FLASH.ld)
 
