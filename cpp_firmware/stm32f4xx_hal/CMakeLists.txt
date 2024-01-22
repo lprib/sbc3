@@ -106,7 +106,6 @@ PRIVATE
 target_link_libraries(stm32f4xx_hal
 PUBLIC
     cmsis
-PRIVATE
     hal_conf
 )
 

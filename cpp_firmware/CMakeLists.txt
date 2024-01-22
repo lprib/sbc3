@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(sbc3 LANGUAGES C CXX ASM)
+project(sbc3 LANGUAGES C ASM)
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
