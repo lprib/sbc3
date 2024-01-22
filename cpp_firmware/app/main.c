@@ -1,5 +1,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 void Error_Handler(void);
 
@@ -11,14 +13,6 @@ void Error_Handler(void);
 #define CODEC_GPIO1_GPIO_Port GPIOB
 #define CODEC_NRESET_Pin GPIO_PIN_9
 #define CODEC_NRESET_GPIO_Port GPIOA
-
-void SysTick_Handler(void)
-{
-   /* USER CODE BEGIN SysTick_IRQn 0 */
-
-   /* USER CODE END SysTick_IRQn 0 */
-   HAL_IncTick();
-}
 
 void SystemClock_Config(void)
 {
@@ -82,109 +76,43 @@ void write_leds(uint16_t val)
    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
+void task(void *thing)
+{
+   for (;;)
+   {
+      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+      vTaskDelay(pdMS_TO_TICKS(100));
+   }
+}
+
 int main(void)
 {
    HAL_Init();
    SystemClock_Config();
 
-   GPIO_InitTypeDef GPIO_InitStruct = {0};
-   /* USER CODE BEGIN MX_GPIO_Init_1 */
-   /* USER CODE END MX_GPIO_Init_1 */
-
-   /* GPIO Ports Clock Enable */
-   __HAL_RCC_GPIOE_CLK_ENABLE();
-   __HAL_RCC_GPIOH_CLK_ENABLE();
-   __HAL_RCC_GPIOC_CLK_ENABLE();
-   __HAL_RCC_GPIOA_CLK_ENABLE();
    __HAL_RCC_GPIOB_CLK_ENABLE();
-   __HAL_RCC_GPIOD_CLK_ENABLE();
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_14, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_11 | GPIO_PIN_12, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6 | GPIO_PIN_7 | CODEC_NRESET_Pin, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(GPIOB, DBG_LED_Pin | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_PIN_RESET);
-
-   /*Configure GPIO pins : PE2 PE3 PE4 PE5
-                            PE14 */
-   GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_14;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-   /*Configure GPIO pins : PC2 PC3 PC11 PC12 */
-   GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_11 | GPIO_PIN_12;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-   /*Configure GPIO pins : PA6 PA7 CODEC_NRESET_Pin */
-   GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7 | CODEC_NRESET_Pin;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-   /*Configure GPIO pins : DBG_LED_Pin PB4 PB5 PB8 */
-   GPIO_InitStruct.Pin = DBG_LED_Pin | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+   GPIO_InitTypeDef GPIO_InitStruct = {0};
+   GPIO_InitStruct.Pin = GPIO_PIN_0;
    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
    GPIO_InitStruct.Pull = GPIO_NOPULL;
    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-   /*Configure GPIO pins : BOOT1_Pin CODEC_GPIO1_Pin */
-   GPIO_InitStruct.Pin = BOOT1_Pin | CODEC_GPIO1_Pin;
+   GPIO_InitStruct.Pin = BOOT1_Pin;
    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
    GPIO_InitStruct.Pull = GPIO_NOPULL;
    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-   /*Configure GPIO pin : PE15 */
-   GPIO_InitStruct.Pin = GPIO_PIN_15;
-   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+   /* Ensure all priority bits are assigned as preemption priority bits. */
+   // TODO(liam) what do, not in hal??
+   // NVIC_PriorityGroupConfig(NVIC_PRIORITYGROUP_4);
 
-   /*Configure GPIO pins : PA10 PA11 PA12 */
-   GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
-   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-   GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+   xTaskCreate(&task, "BLINK", 256, NULL, tskIDLE_PRIORITY + 1U, NULL);
 
-   /*Configure GPIO pins : PD0 PD1 PD2 PD3
-                            PD4 PD5 PD6 PD7 */
-   GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+   vTaskStartScheduler();
 
-   int i = 0;
    while (1)
    {
-      /* USER CODE END WHILE */
-      i++;
-      if (i >= 16)
-      {
-         i = 0;
-         // HAL_UART_Transmit(&huart3, test, sizeof(test), 10);
-      }
-      write_leds(1 << i);
-      // HAL_GPIO_TogglePin(DBG_LED_GPIO_Port, DBG_LED_Pin);
-      HAL_Delay(10);
-      /* USER CODE BEGIN 3 */
    }
 }
 

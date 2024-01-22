@@ -6,7 +6,11 @@ PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/system_stm32f4xx.c
 )
 
-target_link_libraries(app stm32f4xx_hal)
+target_link_libraries(app
+PRIVATE
+    stm32f4xx_hal
+    freertos_kernel
+)
 target_compile_options(app
 PRIVATE
     -O3
