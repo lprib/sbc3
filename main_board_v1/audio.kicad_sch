@@ -1450,10 +1450,6 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7cd604db-2c76-4bf8-908c-1243f87d4d35)
   )
-  (text "oops" (at 153.035 105.41 0)
-    (effects (font (size 1.27 1.27)) (justify left bottom))
-    (uuid dd9d90fe-3d1c-40d6-8b0d-e7661222d7f8)
-  )
 
   (label "HP_VDD" (at 98.425 67.31 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left bottom))
