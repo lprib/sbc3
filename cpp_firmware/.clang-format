@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+IndentWidth: 3
+ContinuationIndentWidth: 3
+
+BinPackArguments: false
+AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: BlockIndent
+SpaceBeforeParens: Never
+PointerAlignment: Left
+ReflowComments: true
+BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: CurrentLine
+ConstructorInitializerIndentWidth: 3
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty

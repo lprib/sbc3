@@ -1,6 +1,13 @@
 add_library(cmsis INTERFACE)
 target_include_directories(cmsis
 INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/Device/ST/STM32F4xx/Include
-    ${CMAKE_CURRENT_LIST_DIR}/Include
+    Device/ST/STM32F4xx/Include
+    Include
+)
+
+# HAL does heaps of volatile |= which c++ decided to deprecate (thanks c++
+# commitee)
+target_compile_options(cmsis
+INTERFACE
+    $<$<COMPILE_LANGUAGE:CXX>:-Wno-volatile>
 )
