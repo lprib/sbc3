@@ -3,6 +3,7 @@ target_sources(app
 PRIVATE
     main.cpp
     system_clock_config.cpp
+    gpio.cpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c
@@ -32,6 +33,7 @@ PRIVATE
     -Wlogical-op
     -Wmissing-declarations
     -Wmissing-include-dirs
+    -Wno-unused
     -Wnoexcept
     -Woverloaded-virtual
     -Wredundant-decls
@@ -40,9 +42,8 @@ PRIVATE
     -Wsign-promo
     -Wstrict-null-sentinel
     -Wstrict-overflow=5
-    -Wswitch-default
+    -Wswitch
     -Wundef
-    -Wno-unused
     >
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/STM32F405VGTx_FLASH.ld)

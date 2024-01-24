@@ -5,6 +5,7 @@
 
 #include "error_handler.hpp"
 #include "system_clock_config.hpp"
+#include "gpio.hpp"
 
 #define DBG_LED_Pin GPIO_PIN_0
 #define DBG_LED_GPIO_Port GPIOB
@@ -38,9 +39,10 @@ static void write_leds(uint16_t val) {
 }
 
 static void task(void* thing) {
+   gpio::to_lowspeed_pp_out(gpio::Pin::DebugLed);
    for(;;) {
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-      vTaskDelay(pdMS_TO_TICKS(20));
+      gpio::toggle(gpio::Pin::DebugLed);
+      vTaskDelay(pdMS_TO_TICKS(1000));
    }
 }
 
@@ -48,26 +50,7 @@ int main(void) {
    HAL_Init();
 
    app::system_clock_config();
-
-   __HAL_RCC_GPIOB_CLK_ENABLE();
-   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
-   GPIO_InitTypeDef gpiob0_init = {
-      .Pin = GPIO_PIN_0,
-      .Mode = GPIO_MODE_OUTPUT_PP,
-      .Pull = GPIO_NOPULL,
-      .Speed = GPIO_SPEED_FREQ_LOW,
-      .Alternate = 0,
-   };
-   HAL_GPIO_Init(GPIOB, &gpiob0_init);
-
-   GPIO_InitTypeDef boot1_init = {
-      .Pin = BOOT1_Pin,
-      .Mode = GPIO_MODE_INPUT,
-      .Pull = GPIO_NOPULL,
-      .Speed = GPIO_SPEED_FREQ_LOW,
-      .Alternate = 0,
-   };
-   HAL_GPIO_Init(GPIOB, &boot1_init);
+   gpio::configure_clocks();
 
    /* Ensure all priority bits are assigned as preemption priority bits. */
    // TODO(liam) what do, not in hal??
