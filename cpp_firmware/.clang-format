@@ -13,3 +13,5 @@ PackConstructorInitializers: CurrentLine
 ConstructorInitializerIndentWidth: 3
 AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
+Cpp11BracedListStyle: true
+IndentExternBlock: NoIndent

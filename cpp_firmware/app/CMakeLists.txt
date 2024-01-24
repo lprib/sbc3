@@ -20,6 +20,30 @@ PRIVATE
 target_compile_options(app
 PRIVATE
     -O3
+    $<$<COMPILE_LANGUAGE:CXX>:
+    -Wall
+    -Wextra
+    -Wcast-align
+    -Wcast-qual
+    -Wctor-dtor-privacy
+    -Wdisabled-optimization
+    -Wformat=2
+    -Winit-self
+    -Wlogical-op
+    -Wmissing-declarations
+    -Wmissing-include-dirs
+    -Wnoexcept
+    -Woverloaded-virtual
+    -Wredundant-decls
+    -Wshadow
+    -Wsign-conversion
+    -Wsign-promo
+    -Wstrict-null-sentinel
+    -Wstrict-overflow=5
+    -Wswitch-default
+    -Wundef
+    -Wno-unused
+    >
 )
 set(LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/STM32F405VGTx_FLASH.ld)
 set_target_properties(app PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
