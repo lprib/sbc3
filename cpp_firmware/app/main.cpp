@@ -39,9 +39,9 @@ static void write_leds(uint16_t val) {
 }
 
 static void task(void* thing) {
-   gpio::to_lowspeed_pp_out(gpio::Pin::DebugLed);
+   gpio::DebugLed.to_lowspeed_pp_out();
    for(;;) {
-      gpio::toggle(gpio::Pin::DebugLed);
+      gpio::DebugLed.toggle();
       vTaskDelay(pdMS_TO_TICKS(1000));
    }
 }

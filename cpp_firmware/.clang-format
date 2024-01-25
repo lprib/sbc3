@@ -15,3 +15,6 @@ AllowShortBlocksOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: Empty
 Cpp11BracedListStyle: true
 IndentExternBlock: NoIndent
+IndentAccessModifiers: false
+AccessModifierOffset: -3
+PenaltyReturnTypeOnItsOwnLine: 200
