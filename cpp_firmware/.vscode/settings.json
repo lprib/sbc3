@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.rng": "xml",
+        "stm32f4xx_hal_def.h": "c"
+    },
+    "cortex-debug.gdbPath": "gdb-multiarch",
+}

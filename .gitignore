@@ -6,3 +6,4 @@ fp-info-cache
 build/
 target/
 .vscode/
+!cpp_firmware/.vscode
