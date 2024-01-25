@@ -3,7 +3,10 @@ target_sources(app
 PRIVATE
     main.cpp
     system_clock_config.cpp
+    gpio.hpp
     gpio.cpp
+    ledstrip.hpp
+    ledstrip.cpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c

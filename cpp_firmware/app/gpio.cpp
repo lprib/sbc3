@@ -3,7 +3,7 @@
 #include "stm32f4xx_hal.h"
 
 namespace gpio {
-void configure_clocks() {
+void init() {
    __HAL_RCC_GPIOB_CLK_ENABLE();
    __HAL_RCC_GPIOD_CLK_ENABLE();
    __HAL_RCC_GPIOE_CLK_ENABLE();

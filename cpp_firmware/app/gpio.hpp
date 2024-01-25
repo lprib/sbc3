@@ -8,7 +8,7 @@
 namespace gpio {
 
 
-void configure_clocks();
+void init();
 
 class Pin {
 public:
@@ -68,18 +68,18 @@ private:
    }
 };
 
-const Pin DebugLed{GPIOB, LL_GPIO_PIN_0};
-const Pin LedSer{GPIOE, LL_GPIO_PIN_2};
-const Pin LedSrClk{GPIOE, LL_GPIO_PIN_3};
-const Pin LedSrClr{GPIOE, LL_GPIO_PIN_4};
-const Pin LedRclk{GPIOE, LL_GPIO_PIN_5};
-const Pin Gp0{GPIOD, LL_GPIO_PIN_8};
-const Pin Gp1{GPIOD, LL_GPIO_PIN_9};
-const Pin Gp2{GPIOD, LL_GPIO_PIN_10};
-const Pin Gp3{GPIOD, LL_GPIO_PIN_11};
-const Pin Gp4{GPIOD, LL_GPIO_PIN_12};
-const Pin Gp5{GPIOD, LL_GPIO_PIN_13};
-const Pin Gp6{GPIOD, LL_GPIO_PIN_14};
-const Pin Gp7{GPIOD, LL_GPIO_PIN_15};
+const Pin dbg_led{GPIOB, LL_GPIO_PIN_0};
+const Pin led_ser{GPIOE, LL_GPIO_PIN_2};
+const Pin led_srclk{GPIOE, LL_GPIO_PIN_3};
+const Pin led_srclr{GPIOE, LL_GPIO_PIN_4};
+const Pin led_rclk{GPIOE, LL_GPIO_PIN_5};
+const Pin gp0{GPIOD, LL_GPIO_PIN_8};
+const Pin gp1{GPIOD, LL_GPIO_PIN_9};
+const Pin gp2{GPIOD, LL_GPIO_PIN_10};
+const Pin gp3{GPIOD, LL_GPIO_PIN_11};
+const Pin gp4{GPIOD, LL_GPIO_PIN_12};
+const Pin gp5{GPIOD, LL_GPIO_PIN_13};
+const Pin gp6{GPIOD, LL_GPIO_PIN_14};
+const Pin gp7{GPIOD, LL_GPIO_PIN_15};
 
 } // namespace gpio
