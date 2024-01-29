@@ -1,9 +1,10 @@
 #include "ledstrip.hpp"
 
 #include "gpio.hpp"
-#include "stm32f4xx_hal.h"
+#include "util.hpp"
 
 #include "FreeRTOS.h"
+#include "stm32f4xx_hal.h"
 #include "task.h"
 
 namespace ledstrip {
@@ -20,15 +21,13 @@ void write(uint16_t mask) {
    for(int i = 0; i < 16; ++i) {
       gpio::led_ser.write((mask & (0x8000 >> i)) != 0);
       gpio::led_srclk.write(true);
-      // todo(liam)
-      vTaskDelay(1);
+      util::spinloop_us(1);
       gpio::led_srclk.write(false);
-      vTaskDelay(1);
    }
+   util::spinloop_us(1);
    gpio::led_rclk.write(true);
-   vTaskDelay(1);
+   util::spinloop_us(1);
    gpio::led_rclk.write(false);
-   vTaskDelay(1);
 }
 
 } // namespace ledstrip

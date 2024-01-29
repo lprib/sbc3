@@ -5,6 +5,8 @@ PRIVATE
     system_clock_config.cpp
     gpio.hpp
     gpio.cpp
+    util.hpp
+    util.cpp
     ledstrip.hpp
     ledstrip.cpp
 
