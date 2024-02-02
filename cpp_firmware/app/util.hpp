@@ -31,7 +31,7 @@ static inline void spinloop_us(int us) {
     "    nop\n\t"
     "    nop\n\t"
     "    subs %[count], %[count], #1\n\t" // 1 clock
-    "    bne spinloop_us_loop_start\n\t"                    // nominal 1 clock
+    "    bne spinloop_us_loop_start\n\t" // nominal 1 clock
     : [count] "+r"(loops));
     //clang-format on
 }
