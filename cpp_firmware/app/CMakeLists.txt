@@ -57,6 +57,7 @@ target_link_options(app
 PUBLIC
     -T${LINKER_SCRIPT}
     -Wl,--gc-sections
+    -Wl,--no-warn-rwx-segment # ld will generate LOAD RWE section for some reason, this shuts it up
     -lc -lm
 )
 target_include_directories(app
