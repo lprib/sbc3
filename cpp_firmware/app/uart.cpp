@@ -43,6 +43,6 @@ void Uart::init(uint32_t baudrate) {
 
 void Uart::tx_blocking(std::span<uint8_t const> data) {
    // waits on TXE forever?
-   HAL_UART_Transmit(&m_handle, data.data(), data.size(), 100);
+   HAL_UART_Transmit(&m_handle, data.data(), data.size(), HAL_MAX_DELAY);
 }
 } // namespace uart

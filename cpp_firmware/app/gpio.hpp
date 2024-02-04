@@ -7,7 +7,6 @@
 
 namespace gpio {
 
-
 void init();
 
 class Pin {
@@ -30,6 +29,16 @@ public:
          LL_GPIO_PULL_NO,
          LL_GPIO_SPEED_FREQ_LOW,
          LL_GPIO_AF_0
+      );
+   }
+
+   void use_alternate_function(uint8_t alternate_function) const {
+      configure(
+         LL_GPIO_MODE_ALTERNATE,
+         LL_GPIO_OUTPUT_PUSHPULL,
+         LL_GPIO_PULL_NO,
+         LL_GPIO_SPEED_FREQ_VERY_HIGH,
+         static_cast<uint32_t>(alternate_function)
       );
    }
 

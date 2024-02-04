@@ -39,6 +39,14 @@ static void task(void* thing) {
 int main(void) {
    HAL_Init();
 
+   // TODO(liam) these are for uart3, put into uart.cpp?
+   __HAL_RCC_USART3_CLK_ENABLE();
+   __HAL_RCC_GPIOB_CLK_ENABLE();
+   gpio::Pin uart3_tx{GPIOB, GPIO_PIN_10};
+   gpio::Pin uart3_rx{GPIOB, GPIO_PIN_12};
+   uart3_tx.use_alternate_function(7); // UART1..3
+   uart3_rx.use_alternate_function(7); // UART1..3
+
    app::system_clock_config();
    gpio::init();
    ledstrip::init();
@@ -69,3 +77,9 @@ extern "C" void __cxa_pure_virtual() {
    app::error_handler();
 }
 #pragma GCC diagnostic pop
+
+/// @brief Need to call the STM32 HAL tick function otherwise timeouts will
+/// never work
+extern "C" void vApplicationTickHook() {
+   HAL_IncTick();
+}
