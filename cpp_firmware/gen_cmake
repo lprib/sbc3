@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mkdir -p build
+cd build && cmake -S.. -B. -GNinja -DCMAKE_TOOLCHAIN_FILE=../cmake/gnu-arm-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
