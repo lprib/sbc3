@@ -3,7 +3,5 @@ keyboard-backups/
 plots/
 fp-info-cache
 ~*.lck
-build/
 target/
 .vscode/
-!cpp_firmware/.vscode

@@ -7,11 +7,25 @@
         {
             "type": "cortex-debug",
             "request": "launch",
-            "name": "Debug (OpenOCD)",
+            "name": "Debug (build) (OpenOCD)",
             "servertype": "openocd",
             "cwd": "${workspaceFolder}",
             "runToEntryPoint": "main",
             "executable": "${workspaceFolder}/build/app/app",
+            "device": "STM32F405VGT6",
+            "configFiles": [
+                "${workspaceFolder}/openocd.cfg",
+            ],
+            "showDevDebugOutput": "none",
+        },
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug (dbg) (OpenOCD)",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "runToEntryPoint": "main",
+            "executable": "${workspaceFolder}/dbg/app/app",
             "device": "STM32F405VGT6",
             "configFiles": [
                 "${workspaceFolder}/openocd.cfg",

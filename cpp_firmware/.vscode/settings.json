@@ -1,8 +1,10 @@
 {
     "files.associations": {
         "*.rng": "xml",
-        "stm32f4xx_hal_def.h": "c"
+        "stm32f4xx_hal_def.h": "c",
+        "span": "cpp"
     },
     // "cortex-debug.gdbPath": "gdb-multiarch",
     "cortex-debug.gdbPath": "arm-none-eabi-gdb",
+    "C_Cpp.default.cppStandard": "c++20"
 }

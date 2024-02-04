@@ -1,4 +1,29 @@
 #!/bin/bash
 
-mkdir -p build
-cd build && cmake -S.. -B. -GNinja -DCMAKE_TOOLCHAIN_FILE=../cmake/gnu-arm-toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+# Usage: ./gen_cmake [BUILD_TYPE [BUILD_FOLDER]]
+
+# TODO(liam) this should really be a cmake superbuild?
+
+DefaultProfile="Release"
+DefaultBuild="build"
+
+if [ "$#" -ge 1 ]
+then
+    Profile="$1"
+    if [ "$#" -ge 2 ]
+    then
+        Build="$2"
+    else
+        Build="${DefaultBuild}"
+    fi
+else
+    Profile="${DefaultProfile}"
+    Build="${DefaultBuild}"
+fi
+
+
+echo build folder: ${Build}
+echo build profile: ${Profile}
+
+mkdir -p "${Build}"
+cd "${Build}" && cmake -S.. -B. -GNinja -DCMAKE_TOOLCHAIN_FILE=../cmake/gnu-arm-toolchain.cmake -DCMAKE_BUILD_TYPE="${Profile}"
