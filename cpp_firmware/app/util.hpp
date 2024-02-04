@@ -1,38 +1,29 @@
 #pragma once
 
-namespace util {
-static inline void spinloop_us(int us) {
-   /// 168 clocks per us
-   /// choose 21 clocks per loop
-   /// 168/21 = 8
-   /// must loop `us * 8` times;
+#include "stm32f4xx.h"
 
-   int loops = us * 8;
-   // clang-format off
-   asm volatile(
-    "spinloop_us_loop_start:\n\t"
-    "    nop\n\t" // 19 nops
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    nop\n\t"
-    "    subs %[count], %[count], #1\n\t" // 1 clock
-    "    bne spinloop_us_loop_start\n\t" // nominal 1 clock
-    : [count] "+r"(loops));
-    //clang-format on
+namespace util {
+
+/// -Os output of for loop:
+/// ```
+/// .L2:
+///         nop                  // 1 instr
+///         subs    r3, r3, #1   // 1 instr
+///         bne     .L2          // 1 instr (1+Pc in ref manual, assume branch
+///                              // is predicted and Pc = 0)
+/// ```
+#pragma GCC push_options
+#pragma GCC optimize("-Os")
+static inline void spinloop_us(int us) {
+   static constexpr int US_PER_S = 1000000;
+   static constexpr int CLK_PER_LOOP = 3;
+
+   int const cycles = us * ((int)SystemCoreClock / US_PER_S / CLK_PER_LOOP);
+
+   for(int i = 0; i < cycles; i++) {
+      __asm volatile("nop");
+   }
 }
-}
+#pragma GCC pop_options
+
+} // namespace util

@@ -13,9 +13,10 @@ static void task(void* thing) {
    for(;;) {
       gpio::dbg_led.toggle();
       for(int i = 0; i < 16; ++i) {
-         ledstrip::write((1 << i) | (0x8000 >> i));
+         ledstrip::write(0x8000 >> i);
+         vTaskDelay(pdMS_TO_TICKS(10));
       }
-      vTaskDelay(pdMS_TO_TICKS(100));
+      // vTaskDelay(pdMS_TO_TICKS(100));
    }
 }
 

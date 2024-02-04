@@ -20,10 +20,12 @@ void init() {
 void write(uint16_t mask) {
    for(int i = 0; i < 16; ++i) {
       gpio::led_ser.write((mask & (0x8000 >> i)) != 0);
+      util::spinloop_us(1);
       gpio::led_srclk.write(true);
       util::spinloop_us(1);
       gpio::led_srclk.write(false);
    }
+
    util::spinloop_us(1);
    gpio::led_rclk.write(true);
    util::spinloop_us(1);
