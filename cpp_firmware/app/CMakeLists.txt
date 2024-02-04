@@ -9,6 +9,8 @@ PRIVATE
     util.cpp
     ledstrip.hpp
     ledstrip.cpp
+    uart.hpp
+    uart.cpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c

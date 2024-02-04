@@ -1,3 +1,5 @@
+#include <span>
+
 #include "FreeRTOS.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
@@ -7,16 +9,30 @@
 #include "gpio.hpp"
 #include "ledstrip.hpp"
 #include "system_clock_config.hpp"
+#include "uart.hpp"
 
 static void task(void* thing) {
+   uart::Uart dbg{uart::Peripheral::Three};
+
+   dbg.init(115200);
    gpio::dbg_led.to_lowspeed_pp_out();
+
+   char const* helo = "helo\n";
+   uint8_t const* x = reinterpret_cast<uint8_t const*>(helo);
+
    for(;;) {
       gpio::dbg_led.toggle();
       for(int i = 0; i < 16; ++i) {
          ledstrip::write(0x8000 >> i);
-         vTaskDelay(pdMS_TO_TICKS(10));
+         vTaskDelay(pdMS_TO_TICKS(5));
       }
-      // vTaskDelay(pdMS_TO_TICKS(100));
+      for(int i = 15; i >= 0; --i) {
+         ledstrip::write(0x8000 >> i);
+         vTaskDelay(pdMS_TO_TICKS(5));
+      }
+      vTaskDelay(pdMS_TO_TICKS(100));
+
+      dbg.tx_blocking(std::span(x, x + 5));
    }
 }
 
