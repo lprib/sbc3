@@ -12,16 +12,14 @@
 #include "uart.hpp"
 
 static void task(void* thing) {
-   uart::Uart dbg{uart::Peripheral::Three};
-
-   dbg.init(115200);
+   uart::Uart3.init(115200);
    gpio::dbg_led.to_lowspeed_pp_out();
 
    char const* helo = "helo\n";
    uint8_t const* x = reinterpret_cast<uint8_t const*>(helo);
 
    for(;;) {
-      gpio::dbg_led.toggle();
+      // gpio::dbg_led.toggle();
       for(int i = 0; i < 16; ++i) {
          ledstrip::write(0x8000 >> i);
          vTaskDelay(pdMS_TO_TICKS(5));
@@ -32,7 +30,7 @@ static void task(void* thing) {
       }
       vTaskDelay(pdMS_TO_TICKS(100));
 
-      dbg.tx_blocking(std::span(x, x + 5));
+      uart::Uart3.tx_blocking(std::span(x, x + 5));
    }
 }
 
