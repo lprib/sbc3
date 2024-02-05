@@ -99,6 +99,11 @@ PUBLIC
     Inc
 )
 
+target_compile_definitions(stm32f4xx_hal
+PUBLIC
+    USE_FULL_LL_DRIVER
+)
+
 # HAL does heaps of volatile |= which c++ decided to deprecate (thanks c++
 # commitee)
 target_compile_options(stm32f4xx_hal

@@ -9,10 +9,12 @@
 #include "gpio.hpp"
 #include "ledstrip.hpp"
 #include "system_clock_config.hpp"
-#include "uart.hpp"
+// #include "uart.hpp"
+#include "serial.hpp"
 
 static void task(void* thing) {
-   uart::Uart3.init(115200);
+   // uart::Uart3.init(115200);
+   serial::init();
    gpio::dbg_led.to_lowspeed_pp_out();
 
    char const* helo = "helo\n";
@@ -20,6 +22,7 @@ static void task(void* thing) {
 
    for(;;) {
       // gpio::dbg_led.toggle();
+      /*
       for(int i = 0; i < 16; ++i) {
          ledstrip::write(0x8000 >> i);
          vTaskDelay(pdMS_TO_TICKS(5));
@@ -28,9 +31,11 @@ static void task(void* thing) {
          ledstrip::write(0x8000 >> i);
          vTaskDelay(pdMS_TO_TICKS(5));
       }
+      */
       vTaskDelay(pdMS_TO_TICKS(100));
 
-      uart::Uart3.tx_blocking(std::span(x, x + 5));
+      serial::tx((unsigned char)'a');
+      // uart::Uart3.tx_blocking(std::span(x, x + 5));
    }
 }
 
@@ -42,8 +47,8 @@ int main(void) {
    __HAL_RCC_GPIOB_CLK_ENABLE();
    gpio::Pin uart3_tx{GPIOB, GPIO_PIN_10};
    gpio::Pin uart3_rx{GPIOB, GPIO_PIN_12};
-   uart3_tx.use_alternate_function(7); // UART1..3
-   uart3_rx.use_alternate_function(7); // UART1..3
+   uart3_tx.use_alternate_function(7); // USART[1..3]
+   uart3_rx.use_alternate_function(7); // USART[1..3]
 
    app::system_clock_config();
    gpio::init();

@@ -11,6 +11,8 @@ PRIVATE
     ledstrip.cpp
     uart.hpp
     uart.cpp
+    serial.hpp
+    serial.cpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c
