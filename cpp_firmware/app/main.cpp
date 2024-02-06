@@ -17,9 +17,6 @@ static void task(void* thing) {
    serial::init();
    gpio::dbg_led.to_lowspeed_pp_out();
 
-   char const* helo = "helo\n";
-   uint8_t const* x = reinterpret_cast<uint8_t const*>(helo);
-
    for(;;) {
       // gpio::dbg_led.toggle();
       /*
@@ -34,7 +31,7 @@ static void task(void* thing) {
       */
       vTaskDelay(pdMS_TO_TICKS(100));
 
-      serial::tx((unsigned char)'a');
+      serial::block_tx("hello\n");
       // uart::Uart3.tx_blocking(std::span(x, x + 5));
    }
 }

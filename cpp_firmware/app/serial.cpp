@@ -25,15 +25,32 @@ void init() {
       __LL_RCC_CALC_PCLK1_FREQ(SystemCoreClock, LL_RCC_GetAPB1Prescaler());
    LL_USART_SetBaudRate(USART3, pclk1, LL_USART_OVERSAMPLING_16, 115200);
 
-
    LL_USART_Enable(USART3);
 }
 
-void tx(unsigned char n) {
-   while(!LL_USART_IsActiveFlag_TXE(USART3))
-      ;
+void block_tx(unsigned char n) {
+   while(!LL_USART_IsActiveFlag_TXE(USART3)) {
+   }
    LL_USART_TransmitData8(USART3, n);
-   while(!LL_USART_IsActiveFlag_TC(USART3))
-      ;
+   while(!LL_USART_IsActiveFlag_TC(USART3)) {
+   }
 }
+
+void block_tx(std::span<unsigned char const> ns) {
+   for(auto n : ns) {
+      while(!LL_USART_IsActiveFlag_TXE(USART3)) {
+      }
+      LL_USART_TransmitData8(USART3, n);
+   }
+   while(!LL_USART_IsActiveFlag_TC(USART3)) {
+   }
+}
+
+void block_tx(std::string_view str) {
+   block_tx(std::span<unsigned char const>(
+      reinterpret_cast<unsigned char const*>(str.begin()),
+      reinterpret_cast<unsigned char const*>(str.end())
+   ));
+}
+
 } // namespace serial
