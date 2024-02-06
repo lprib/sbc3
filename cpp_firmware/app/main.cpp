@@ -12,7 +12,12 @@
 #include "system_clock_config.hpp"
 // #include "uart.hpp"
 #include "serial.hpp"
+#include "sync.hpp"
 #include "util.hpp"
+
+enum class Qt { Thing, Thang };
+
+static sync::queue<Qt> q(100);
 
 static void task(void* arg) {
    (void)arg;
@@ -20,6 +25,7 @@ static void task(void* arg) {
    serial::init();
 
    for(;;) {
+      auto rump = q.blocking_receive();
       /*
       for(int i = 0; i < 16; ++i) {
          ledstrip::write(0x8000 >> i);
@@ -32,8 +38,30 @@ static void task(void* arg) {
       */
       vTaskDelay(pdMS_TO_TICKS(100));
 
-      serial::block_tx("hello\n");
+      switch(rump) {
+      case Qt::Thang:
+         serial::block_tx("Qt::Thang\n");
+         break;
+      case Qt::Thing:
+         serial::block_tx("Qt::Thing\n");
+         break;
+      default:
+         serial::block_tx("borked\n");
+         break;
+      }
       // uart::Uart3.tx_blocking(std::span(x, x + 5));
+   }
+}
+
+static void task2(void* arg) {
+   (void)arg;
+   for(;;) {
+      q.blocking_send(Qt::Thing);
+      vTaskDelay(pdMS_TO_TICKS(100));
+      q.blocking_send(Qt::Thing);
+      vTaskDelay(pdMS_TO_TICKS(100));
+      q.blocking_send(Qt::Thang);
+      vTaskDelay(pdMS_TO_TICKS(100));
    }
 }
 
@@ -61,6 +89,15 @@ int main(void) {
    xTaskCreate(
       &task,
       "BLINK",
+      configMINIMAL_STACK_SIZE * 8,
+      NULL,
+      tskIDLE_PRIORITY + 1U,
+      NULL
+   );
+
+   xTaskCreate(
+      &task2,
+      "sss",
       configMINIMAL_STACK_SIZE * 8,
       NULL,
       tskIDLE_PRIORITY + 1U,
