@@ -10,6 +10,9 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
+// test
+#include "gpio.hpp"
+
 namespace serial {
 
 static sync::mutex serial_mutex;
@@ -34,6 +37,11 @@ void init() {
    LL_USART_SetBaudRate(USART3, pclk1, LL_USART_OVERSAMPLING_16, 115200);
 
    LL_USART_Enable(USART3);
+
+   NVIC_SetPriority(USART3_IRQn, 6);
+   NVIC_EnableIRQ(USART3_IRQn);
+
+   LL_USART_EnableIT_RXNE(USART3);
 }
 
 void block_tx(std::span<unsigned char const> ns) {
@@ -56,6 +64,19 @@ void block_tx(std::string_view str) {
       reinterpret_cast<unsigned char const*>(str.begin()),
       reinterpret_cast<unsigned char const*>(str.end())
    ));
+}
+
+// unsigned char blocking_rx() {
+//    while(!LL_USART_IsActiveFlag_RXNE(USART3)) {
+//    }
+//    return LL_USART_ReceiveData8(USART3);
+// }
+
+extern "C" void USART3_IRQHandler(void) {
+   gpio::dbg_led.write(true);
+   volatile uint8_t data = LL_USART_ReceiveData8(USART3);
+
+   gpio::dbg_led.write(data & 1);
 }
 
 } // namespace serial

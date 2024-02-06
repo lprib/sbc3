@@ -70,5 +70,6 @@
     // "cortex-debug.gdbPath": "gdb-multiarch",
     "cortex-debug.gdbPath": "arm-none-eabi-gdb",
     "C_Cpp.default.cppStandard": "c++20",
-    "editor.tabSize": 3
+    "editor.tabSize": 3,
+    "cortex-debug.variableUseNaturalFormat": false
 }

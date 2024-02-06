@@ -22,7 +22,6 @@ static sync::queue<Qt> q(100);
 static void task(void* arg) {
    (void)arg;
    // uart::Uart3.init(115200);
-   serial::init();
 
    for(;;) {
       auto rump = q.blocking_receive();
@@ -40,13 +39,13 @@ static void task(void* arg) {
 
       switch(rump) {
       case Qt::Thang:
-         serial::block_tx("Qt::Thang\n");
+         // serial::block_tx("Qt::Thang\n");
          break;
       case Qt::Thing:
-         serial::block_tx("Qt::Thing\n");
+         // serial::block_tx("Qt::Thing\n");
          break;
       default:
-         serial::block_tx("borked\n");
+         // serial::block_tx("borked\n");
          break;
       }
       // uart::Uart3.tx_blocking(std::span(x, x + 5));
@@ -56,12 +55,14 @@ static void task(void* arg) {
 static void task2(void* arg) {
    (void)arg;
    for(;;) {
-      q.blocking_send(Qt::Thing);
+      // q.blocking_send(Qt::Thing);
+      // vTaskDelay(pdMS_TO_TICKS(100));
+      // q.blocking_send(Qt::Thing);
+      // vTaskDelay(pdMS_TO_TICKS(100));
+      // q.blocking_send(Qt::Thang);
       vTaskDelay(pdMS_TO_TICKS(100));
-      q.blocking_send(Qt::Thing);
-      vTaskDelay(pdMS_TO_TICKS(100));
-      q.blocking_send(Qt::Thang);
-      vTaskDelay(pdMS_TO_TICKS(100));
+
+      // gpio::dbg_led.write((serial::blocking_rx() & 1) != 0);
    }
 }
 
@@ -72,19 +73,19 @@ int main(void) {
    __HAL_RCC_USART3_CLK_ENABLE();
    __HAL_RCC_GPIOB_CLK_ENABLE();
    gpio::Pin uart3_tx{GPIOB, GPIO_PIN_10};
-   gpio::Pin uart3_rx{GPIOB, GPIO_PIN_12};
+   gpio::Pin uart3_rx{GPIOB, GPIO_PIN_11};
    uart3_tx.use_alternate_function(7); // USART[1..3]
    uart3_rx.use_alternate_function(7); // USART[1..3]
 
    app::system_clock_config();
    gpio::init();
    ledstrip::init();
+   serial::init();
 
    gpio::dbg_led.to_lowspeed_pp_out();
 
-   /* Ensure all priority bits are assigned as preemption priority bits. */
-   // TODO(liam) what do, not in hal??
-   // NVIC_PriorityGroupConfig(NVIC_PRIORITYGROUP_4);
+   // HAL_Init() contains a call to:
+   // HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
    xTaskCreate(
       &task,
