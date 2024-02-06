@@ -1,6 +1,6 @@
 #include "system_clock_config.hpp"
 
-#include "error_handler.hpp"
+#include "error.hpp"
 #include "stm32f4xx_hal.h"
 
 namespace app {
@@ -32,7 +32,7 @@ void system_clock_config() {
           .PLLQ = 7,
        }};
    if(HAL_RCC_OscConfig(&osc_init_struct) != HAL_OK) {
-      error_handler();
+      error::error();
    }
 
    RCC_ClkInitTypeDef clk_init_struct = {
@@ -45,7 +45,7 @@ void system_clock_config() {
    };
 
    if(HAL_RCC_ClockConfig(&clk_init_struct, FLASH_LATENCY_5) != HAL_OK) {
-      error_handler();
+      error::error();
    }
 } // namespace app
 

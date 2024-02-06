@@ -13,6 +13,8 @@ PRIVATE
     uart.cpp
     serial.hpp
     serial.cpp
+    error.hpp
+    sync.hpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c
@@ -42,7 +44,6 @@ PRIVATE
     -Wlogical-op
     -Wmissing-declarations
     -Wmissing-include-dirs
-    -Wno-unused
     -Wnoexcept
     -Woverloaded-virtual
     -Wredundant-decls

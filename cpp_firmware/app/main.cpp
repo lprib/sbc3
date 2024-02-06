@@ -4,21 +4,22 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "task.h"
+#include "timers.h"
 
-#include "error_handler.hpp"
+#include "error.hpp"
 #include "gpio.hpp"
 #include "ledstrip.hpp"
 #include "system_clock_config.hpp"
 // #include "uart.hpp"
 #include "serial.hpp"
+#include "util.hpp"
 
-static void task(void* thing) {
+static void task(void* arg) {
+   (void)arg;
    // uart::Uart3.init(115200);
    serial::init();
-   gpio::dbg_led.to_lowspeed_pp_out();
 
    for(;;) {
-      // gpio::dbg_led.toggle();
       /*
       for(int i = 0; i < 16; ++i) {
          ledstrip::write(0x8000 >> i);
@@ -51,11 +52,20 @@ int main(void) {
    gpio::init();
    ledstrip::init();
 
+   gpio::dbg_led.to_lowspeed_pp_out();
+
    /* Ensure all priority bits are assigned as preemption priority bits. */
    // TODO(liam) what do, not in hal??
    // NVIC_PriorityGroupConfig(NVIC_PRIORITYGROUP_4);
 
-   xTaskCreate(&task, "BLINK", 256, NULL, tskIDLE_PRIORITY + 1U, NULL);
+   xTaskCreate(
+      &task,
+      "BLINK",
+      configMINIMAL_STACK_SIZE * 8,
+      NULL,
+      tskIDLE_PRIORITY + 1U,
+      NULL
+   );
 
    vTaskStartScheduler();
 
@@ -63,18 +73,21 @@ int main(void) {
    }
 }
 
-void app::error_handler(void) {
+void error::error(void) {
    __disable_irq();
    while(1) {
+      gpio::dbg_led.toggle();
+      util::spinloop_us(1000 * 40);
    }
 }
 
+extern "C" {
 /** Handler for pure virtual function calls.  This should be included, otherwise
  * the exception handling is pulled in. */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 extern "C" void __cxa_pure_virtual() {
-   app::error_handler();
+   error::error();
 }
 #pragma GCC diagnostic pop
 
@@ -82,4 +95,29 @@ extern "C" void __cxa_pure_virtual() {
 /// never work
 extern "C" void vApplicationTickHook() {
    HAL_IncTick();
+}
+
+/// @brief FreeRTOS static allocation hook
+void vApplicationGetTimerTaskMemory(
+   StaticTask_t** ppxTimerTaskTCBBuffer, StackType_t** ppxTimerTaskStackBuffer,
+   uint32_t* pulTimerTaskStackSize
+) {
+   static StaticTask_t xTimerTaskTCB;
+   static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
+   *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+   *ppxTimerTaskStackBuffer = uxTimerTaskStack;
+   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
+
+/// @brief FreeRTOS static allocation hook
+void vApplicationGetIdleTaskMemory(
+   StaticTask_t** ppxIdleTaskTCBBuffer, StackType_t** ppxIdleTaskStackBuffer,
+   uint32_t* pulIdleTaskStackSize
+) {
+   static StaticTask_t xIdleTaskTCB;
+   static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
+   *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+   *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
 }

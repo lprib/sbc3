@@ -1,5 +1,5 @@
 #include "uart.hpp"
-#include "error_handler.hpp"
+#include "error.hpp"
 
 namespace uart {
 
@@ -23,7 +23,7 @@ void Uart::init(uint32_t baudrate) {
    m_handle.Init.OverSampling = UART_OVERSAMPLING_16;
    m_handle.RxCpltCallback = Uart3RxComplete;
    if(HAL_UART_Init(&m_handle) != HAL_OK) {
-      app::error_handler();
+      error::error();
    }
 }
 
@@ -38,7 +38,7 @@ void Uart::start_async_rx()
 }
 
 extern "C" void Uart3RxComplete(UART_HandleTypeDef* huart) {
-   
+   (void)huart;
 }
 
 } // namespace uart

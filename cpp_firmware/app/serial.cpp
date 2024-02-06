@@ -1,11 +1,19 @@
 #include "serial.hpp"
 
 #include "stm32f405xx.h"
-
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_usart.h"
 
+#include "error.hpp"
+#include "sync.hpp"
+
+#include "FreeRTOS.h"
+#include "semphr.h"
+
 namespace serial {
+
+static sync::mutex serial_mutex;
+
 void init() {
    LL_USART_Disable(USART3);
    LL_USART_InitTypeDef init{
@@ -28,15 +36,8 @@ void init() {
    LL_USART_Enable(USART3);
 }
 
-void block_tx(unsigned char n) {
-   while(!LL_USART_IsActiveFlag_TXE(USART3)) {
-   }
-   LL_USART_TransmitData8(USART3, n);
-   while(!LL_USART_IsActiveFlag_TC(USART3)) {
-   }
-}
-
 void block_tx(std::span<unsigned char const> ns) {
+   sync::lock l{serial_mutex};
    for(auto n : ns) {
       while(!LL_USART_IsActiveFlag_TXE(USART3)) {
       }
@@ -46,8 +47,12 @@ void block_tx(std::span<unsigned char const> ns) {
    }
 }
 
+void block_tx(unsigned char n) {
+   block_tx(std::span(&n, 1));
+}
+
 void block_tx(std::string_view str) {
-   block_tx(std::span<unsigned char const>(
+   block_tx(std::span(
       reinterpret_cast<unsigned char const*>(str.begin()),
       reinterpret_cast<unsigned char const*>(str.end())
    ));
