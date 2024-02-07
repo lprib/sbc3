@@ -1,0 +1,6 @@
+[
+   {
+      "name": "gnu-arm-baremetal",
+      "toolchainFile": "${workspaceFolder}/cmake/gnu-arm-toolchain.cmake"
+   }
+]
