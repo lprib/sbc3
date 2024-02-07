@@ -39,13 +39,13 @@ static void task(void* arg) {
 
       switch(rump) {
       case Qt::Thang:
-         // serial::block_tx("Qt::Thang\n");
+         // serial::tx("Qt::Thang\n");
          break;
       case Qt::Thing:
-         // serial::block_tx("Qt::Thing\n");
+         // serial::tx("Qt::Thing\n");
          break;
       default:
-         // serial::block_tx("borked\n");
+         // serial::tx("borked\n");
          break;
       }
       // uart::Uart3.tx_blocking(std::span(x, x + 5));

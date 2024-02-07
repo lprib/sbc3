@@ -44,7 +44,7 @@ void init() {
    LL_USART_EnableIT_RXNE(USART3);
 }
 
-void block_tx(std::span<unsigned char const> ns) {
+void tx(std::span<unsigned char const> ns) {
    sync::lock l{serial_mutex};
    for(auto n : ns) {
       while(!LL_USART_IsActiveFlag_TXE(USART3)) {
@@ -55,22 +55,16 @@ void block_tx(std::span<unsigned char const> ns) {
    }
 }
 
-void block_tx(unsigned char n) {
-   block_tx(std::span(&n, 1));
+void tx(unsigned char n) {
+   tx(std::span(&n, 1));
 }
 
-void block_tx(std::string_view str) {
-   block_tx(std::span(
+void tx(std::string_view str) {
+   tx(std::span(
       reinterpret_cast<unsigned char const*>(str.begin()),
       reinterpret_cast<unsigned char const*>(str.end())
    ));
 }
-
-// unsigned char blocking_rx() {
-//    while(!LL_USART_IsActiveFlag_RXNE(USART3)) {
-//    }
-//    return LL_USART_ReceiveData8(USART3);
-// }
 
 extern "C" void USART3_IRQHandler(void) {
    gpio::dbg_led.write(true);
