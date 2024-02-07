@@ -6,8 +6,8 @@
 #include "task.h"
 namespace sync {
 
-struct mutex {
-   mutex() : m_semaphore(xSemaphoreCreateMutexStatic(&m_static_semaphore)) {}
+struct mutex_t {
+   mutex_t() : m_semaphore(xSemaphoreCreateMutexStatic(&m_static_semaphore)) {}
    void lock() {
       (void)xSemaphoreTake(m_semaphore, portMAX_DELAY);
    }
@@ -20,23 +20,23 @@ private:
    StaticSemaphore_t m_static_semaphore;
 };
 
-struct lock {
-   lock(mutex& mutex) : m_mutex(mutex) {
+struct lock_t {
+   lock_t(mutex_t& mutex) : m_mutex(mutex) {
       m_mutex.lock();
    }
-   ~lock() {
+   ~lock_t() {
       m_mutex.unlock();
    }
 
 private:
-   mutex& m_mutex;
+   mutex_t& m_mutex;
 };
 
-struct scheduler_lock {
-   scheduler_lock() {
+struct scheduler_lock_t {
+   scheduler_lock_t() {
       vTaskSuspendAll();
    }
-   ~scheduler_lock() {
+   ~scheduler_lock_t() {
       if(!xTaskResumeAll()) {
          taskYIELD();
       }

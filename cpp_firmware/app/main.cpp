@@ -14,6 +14,7 @@
 #include "serial.hpp"
 #include "sync.hpp"
 #include "util.hpp"
+#include "comms.hpp"
 
 enum class Qt { Thing, Thang };
 
@@ -72,8 +73,8 @@ int main(void) {
    // TODO(liam) these are for uart3, put into uart.cpp?
    __HAL_RCC_USART3_CLK_ENABLE();
    __HAL_RCC_GPIOB_CLK_ENABLE();
-   gpio::Pin uart3_tx{GPIOB, GPIO_PIN_10};
-   gpio::Pin uart3_rx{GPIOB, GPIO_PIN_11};
+   gpio::pin_t uart3_tx{GPIOB, GPIO_PIN_10};
+   gpio::pin_t uart3_rx{GPIOB, GPIO_PIN_11};
    uart3_tx.use_alternate_function(7); // USART[1..3]
    uart3_rx.use_alternate_function(7); // USART[1..3]
 

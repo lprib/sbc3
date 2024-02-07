@@ -1,20 +1,21 @@
 add_executable(app)
 target_sources(app
 PRIVATE
-    main.cpp
-    system_clock_config.cpp
-    gpio.hpp
-    gpio.cpp
-    util.hpp
-    util.cpp
-    ledstrip.hpp
-    ledstrip.cpp
-    uart.hpp
-    uart.cpp
-    serial.hpp
-    serial.cpp
+    comms.cpp
+    comms.hpp
     error.hpp
+    gpio.cpp
+    gpio.hpp
+    irq_definitions.hpp
+    ledstrip.cpp
+    ledstrip.hpp
+    main.cpp
+    serial.cpp
+    serial.hpp
     sync.hpp
+    system_clock_config.cpp
+    util.cpp
+    util.hpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c

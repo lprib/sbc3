@@ -4,6 +4,7 @@
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_usart.h"
 
+#include "irq_definitions.hpp"
 #include "error.hpp"
 #include "sync.hpp"
 
@@ -15,7 +16,7 @@
 
 namespace serial {
 
-static sync::mutex serial_mutex;
+static sync::mutex_t serial_mutex;
 
 void init() {
    LL_USART_Disable(USART3);
@@ -45,7 +46,7 @@ void init() {
 }
 
 void tx(std::span<unsigned char const> ns) {
-   sync::lock l{serial_mutex};
+   sync::lock_t l{serial_mutex};
    for(auto n : ns) {
       while(!LL_USART_IsActiveFlag_TXE(USART3)) {
       }

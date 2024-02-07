@@ -9,9 +9,9 @@ namespace gpio {
 
 void init();
 
-class Pin {
+class pin_t {
 public:
-   constexpr Pin(GPIO_TypeDef* _port, uint16_t _pin) : port(_port), pin(_pin) {}
+   constexpr pin_t(GPIO_TypeDef* _port, uint16_t _pin) : port(_port), pin(_pin) {}
    void to_lowspeed_pp_out() const {
       configure(
          LL_GPIO_MODE_OUTPUT,
@@ -77,18 +77,18 @@ private:
    }
 };
 
-const Pin dbg_led{GPIOB, LL_GPIO_PIN_0};
-const Pin led_ser{GPIOE, LL_GPIO_PIN_2};
-const Pin led_srclk{GPIOE, LL_GPIO_PIN_3};
-const Pin led_srclr{GPIOE, LL_GPIO_PIN_4};
-const Pin led_rclk{GPIOE, LL_GPIO_PIN_5};
-const Pin gp0{GPIOD, LL_GPIO_PIN_8};
-const Pin gp1{GPIOD, LL_GPIO_PIN_9};
-const Pin gp2{GPIOD, LL_GPIO_PIN_10};
-const Pin gp3{GPIOD, LL_GPIO_PIN_11};
-const Pin gp4{GPIOD, LL_GPIO_PIN_12};
-const Pin gp5{GPIOD, LL_GPIO_PIN_13};
-const Pin gp6{GPIOD, LL_GPIO_PIN_14};
-const Pin gp7{GPIOD, LL_GPIO_PIN_15};
+const pin_t dbg_led{GPIOB, LL_GPIO_PIN_0};
+const pin_t led_ser{GPIOE, LL_GPIO_PIN_2};
+const pin_t led_srclk{GPIOE, LL_GPIO_PIN_3};
+const pin_t led_srclr{GPIOE, LL_GPIO_PIN_4};
+const pin_t led_rclk{GPIOE, LL_GPIO_PIN_5};
+const pin_t gp0{GPIOD, LL_GPIO_PIN_8};
+const pin_t gp1{GPIOD, LL_GPIO_PIN_9};
+const pin_t gp2{GPIOD, LL_GPIO_PIN_10};
+const pin_t gp3{GPIOD, LL_GPIO_PIN_11};
+const pin_t gp4{GPIOD, LL_GPIO_PIN_12};
+const pin_t gp5{GPIOD, LL_GPIO_PIN_13};
+const pin_t gp6{GPIOD, LL_GPIO_PIN_14};
+const pin_t gp7{GPIOD, LL_GPIO_PIN_15};
 
 } // namespace gpio
