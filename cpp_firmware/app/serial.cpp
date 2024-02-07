@@ -4,8 +4,8 @@
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_usart.h"
 
-#include "irq_definitions.hpp"
 #include "error.hpp"
+#include "irq_definitions.hpp"
 #include "sync.hpp"
 
 #include "FreeRTOS.h"
@@ -67,11 +67,11 @@ void tx(std::string_view str) {
    ));
 }
 
+} // namespace serial
+
 extern "C" void USART3_IRQHandler(void) {
    gpio::dbg_led.write(true);
-   volatile uint8_t data = LL_USART_ReceiveData8(USART3);
+   volatile unsigned char data = LL_USART_ReceiveData8(USART3);
 
    gpio::dbg_led.write(data & 1);
 }
-
-} // namespace serial
