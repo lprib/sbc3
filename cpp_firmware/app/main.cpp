@@ -11,10 +11,10 @@
 #include "ledstrip.hpp"
 #include "system_clock_config.hpp"
 // #include "uart.hpp"
+#include "comms.hpp"
 #include "serial.hpp"
 #include "sync.hpp"
 #include "util.hpp"
-#include "comms.hpp"
 
 enum class Qt { Thing, Thang };
 
@@ -62,6 +62,8 @@ static void task2(void* arg) {
       // vTaskDelay(pdMS_TO_TICKS(100));
       // q.blocking_send(Qt::Thang);
       vTaskDelay(pdMS_TO_TICKS(100));
+
+      serial::tx("henlo\n");
 
       // gpio::dbg_led.write((serial::blocking_rx() & 1) != 0);
    }
@@ -112,7 +114,7 @@ int main(void) {
    }
 }
 
-void error::error(void) {
+[[noreturn]] void error::error(void) {
    __disable_irq();
    while(1) {
       gpio::dbg_led.toggle();

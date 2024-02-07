@@ -6,7 +6,7 @@ PRIVATE
     error.hpp
     gpio.cpp
     gpio.hpp
-    irq_definitions.hpp
+    irq_declarations.hpp
     ledstrip.cpp
     ledstrip.hpp
     main.cpp
@@ -14,6 +14,8 @@ PRIVATE
     serial.hpp
     sync.hpp
     system_clock_config.cpp
+    uart.cpp
+    uart.hpp
     util.cpp
     util.hpp
 

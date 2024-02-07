@@ -1,11 +1,11 @@
 #pragma once
 
 namespace error {
-void error();
+[[noreturn]] void error();
 
 static inline void check(bool condition) {
    if(!condition) {
       error();
    }
 }
-} // namespace app
+} // namespace error
