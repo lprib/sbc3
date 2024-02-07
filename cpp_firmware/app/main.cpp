@@ -40,13 +40,13 @@ static void task(void* arg) {
 
       switch(rump) {
       case Qt::Thang:
-         // serial::tx("Qt::Thang\n");
+         // serial::print("Qt::Thang\n");
          break;
       case Qt::Thing:
-         // serial::tx("Qt::Thing\n");
+         // serial::print("Qt::Thing\n");
          break;
       default:
-         // serial::tx("borked\n");
+         // serial::print("borked\n");
          break;
       }
       // uart::Uart3.tx_blocking(std::span(x, x + 5));
@@ -63,7 +63,7 @@ static void task2(void* arg) {
       // q.blocking_send(Qt::Thang);
       vTaskDelay(pdMS_TO_TICKS(100));
 
-      serial::tx("henlo\n");
+      serial::println("henlo");
 
       // gpio::dbg_led.write((serial::blocking_rx() & 1) != 0);
    }

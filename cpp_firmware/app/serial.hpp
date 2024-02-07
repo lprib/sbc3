@@ -6,11 +6,11 @@
 namespace serial {
 void init();
 
-/// @brief blocking TX. Not interrupt safe.
-void tx(unsigned char n);
-/// @brief blocking TX. Not interrupt safe.
-void tx(std::span<unsigned char const> ns);
-/// @brief blocking TX. Not interrupt safe.
-void tx(std::string_view str);
+/// None of these are interrupt safe:
+
+void print(unsigned char n);
+void print(std::span<unsigned char const> ns);
+void print(std::string_view str);
+void println(std::string_view str);
 
 } // namespace serial
