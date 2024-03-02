@@ -19,12 +19,23 @@ OPCODES = {
 
     "extern_call": 9, # (moduleid fn# --)
 
-    "load": 10,
+    "loadword": 10,
     "*": 10,
 
-    "store": 11,
+    "storeword": 11,
+    "!": 11,
+
     "push": 12,
     "load_module": 13,
+
+    "loadbyte": 14,
+    "*b": 14,
+
+    "storebyte": 15,
+    "!b": 15,
+
+    "jump_imm": 16,
+    "call_imm": 17,
 }
 
 def compile(program: str) -> bytearray:
@@ -70,6 +81,33 @@ def compile(program: str) -> bytearray:
                     out.append(ord(char))
                 out.append(0)
                 continue
+
+            JUMP_IMM = "jump_imm."
+            if word.startswith(JUMP_IMM):
+                label = word[len(JUMP_IMM):]
+                out.append(OPCODES["jump_imm"])
+                patchups[len(out)] = label
+                out.append(0)
+                out.append(0)
+                continue
+
+            CALL_IMM = "call_imm."
+            if word.startswith(CALL_IMM):
+                label = word[len(CALL_IMM):]
+                out.append(OPCODES["call_imm"])
+                patchups[len(out)] = label
+                out.append(0)
+                out.append(0)
+                continue
+
+            # push label value
+            if word.startswith("."):
+                out.append(OPCODES["push"])
+                patchups[len(out)] = word[1:]
+                out.append(0) # insert space for patchup
+                out.append(0)
+                continue
+            
             
             # short literal
             if word.startswith("##"):
@@ -97,13 +135,6 @@ def compile(program: str) -> bytearray:
                 out.append(bytelit & 0xff)
                 continue
             
-            # push label value
-            if word.startswith("."):
-                out.append(OPCODES["push"])
-                patchups[len(out)] = word[1:]
-                out.append(0) # insert space for patchup
-                out.append(0)
-                continue
             
             print(f"bad word \"{word}\"")
             exit(1)

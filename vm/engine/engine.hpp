@@ -20,9 +20,8 @@ public:
    void execute_module(std::span<unsigned char> bytecode);
 
    StackWord pop() {
-      auto out = m_stack[m_sp - 1];
       --m_sp;
-      return out;
+      return m_stack[m_sp];
    }
 
    void push(StackWord n) {
@@ -31,9 +30,8 @@ public:
    }
 
    StackWord rpop() {
-      auto out = m_return_stack[m_rsp - 1];
       --m_rsp;
-      return out;
+      return m_return_stack[m_rsp];
    }
 
    void rpush(StackWord n) {

@@ -7,7 +7,8 @@ namespace engine {
 
 #define ENGINE_TRACE (1)
 #if ENGINE_TRACE
-#define engine_trace(fmt, ...) std::printf(fmt "\n", ##__VA_ARGS__)
+#define engine_trace(fmt, ...)                                                 \
+   std::printf("engine_trace: " fmt "\n", ##__VA_ARGS__)
 #else
 #define engine_trace(...)
 #endif
@@ -23,11 +24,23 @@ enum Opcode {
    CALL,
    RETURN,
    EXTERN_CALL,
-   LOAD,
-   STORE,
+   LOADWORD,
+   STOREWORD,
    PUSH_IMM,
-   LOADMODULE
+   LOADMODULE,
+   LOADBYTE,
+   STOREBYTE,
+   JUMP_IMM,
+   CALL_IMM,
 };
+
+#define BINOP(_opcode, _op)                                                    \
+   case Opcode::_opcode: {                                                     \
+      auto r = pop();                                                          \
+      auto l = pop();                                                          \
+      engine_trace(#_opcode " %hu %hu", l, r);                                 \
+      push(r _op l);                                                           \
+   } break
 
 static constexpr StackWord SYSTEM_MOD_ID = 0;
 
@@ -49,47 +62,51 @@ void Engine::execute_module(std::span<unsigned char> bytecode) {
       switch(op) {
       case Opcode::NOP:
          break;
-      case Opcode::ADD: {
-         auto r = pop();
-         auto l = pop();
-         push(r + l);
-         engine_trace("add %hu %hu", l, r);
-      } break;
-      case Opcode::SUB: {
-         auto r = pop();
-         auto l = pop();
-         push(r - l);
-         engine_trace("sub %hu %hu", l, r);
-      } break;
-      case Opcode::MUL: {
-         auto r = pop();
-         auto l = pop();
-         push(r * l);
-         engine_trace("mul %hu %hu", l, r);
-      } break;
-      case Opcode::DIV: {
-         auto r = pop();
-         auto l = pop();
-         push(r / l);
-         engine_trace("div %hu %hu", l, r);
-      } break;
+
+         BINOP(ADD, +);
+         BINOP(SUB, -);
+         BINOP(MUL, *);
+         BINOP(DIV, /);
+
       case Opcode::IF:
          break;
       case Opcode::JUMP: {
          auto to = pop();
+         engine_trace("jump %hu", to);
          m_pc = to;
       } break;
-      case Opcode::CALL:
-         break;
+      case Opcode::JUMP_IMM: {
+         auto to = nextDataWord();
+         engine_trace("jump_imm %hu", to);
+         m_pc = to;
+      } break;
+
+      case Opcode::CALL: {
+         auto dest = pop();
+         rpush(m_pc);
+         engine_trace("call %hu", dest);
+         m_pc = dest;
+      } break;
+      case Opcode::CALL_IMM: {
+         auto dest = nextDataWord();
+         rpush(m_pc);
+         engine_trace("call_imm %hu", dest);
+         m_pc = dest;
+      } break;
       case Opcode::RETURN:
          if(m_rsp == 0) {
-            engine_trace("return");
+            engine_trace("return toplevel");
             return;
+         } else {
+            auto parent = rpop();
+            engine_trace("return %hu", parent);
+            m_pc = parent;
          }
          break;
       case Opcode::EXTERN_CALL: {
          auto fn_number = pop();
          auto module = pop();
+         engine_trace("extern_call mod=%hu fn_number=%hu", module, fn_number);
          if(module == SYSTEM_MOD_ID) {
             if(fn_number < m_intrinsics.size()) {
                auto intrinsic = m_intrinsics[fn_number];
@@ -98,36 +115,50 @@ void Engine::execute_module(std::span<unsigned char> bytecode) {
                }
             }
          }
-         engine_trace("extern_call mod=%hu fn_number=%hu", module, fn_number);
       } break;
-      case Opcode::LOAD: {
+      case Opcode::LOADBYTE: {
          auto addr = pop();
-         engine_trace("load %hu", addr);
+         engine_trace("loadbyte %hu", addr);
          push(m_bytecode[addr]);
       } break;
-      case Opcode::STORE:
-         break;
+      case Opcode::LOADWORD: {
+         auto addr = pop();
+         engine_trace("loadword %hu", addr);
+         push(m_bytecode[addr] | (m_bytecode[addr + 1] << 8));
+      } break;
+      case Opcode::STOREBYTE: {
+         auto location = pop();
+         auto value = pop();
+         m_bytecode[location] = value & 0xff;
+      } break;
+      case Opcode::STOREWORD: {
+         auto location = pop();
+         auto value = pop();
+         m_bytecode[location] = value & 0xff;
+         m_bytecode[location + 1] = (value >> 8) & 0xff;
+      } break;
+
       case Opcode::PUSH_IMM: {
-         push(nextDataWord());
+         auto n = nextDataWord();
+         engine_trace("push_imm %hu", n);
+         push(n);
       } break;
       case Opcode::LOADMODULE: {
          // TODO(liam) safety
-         auto dest_id_ptr = pop();
          auto module_name_ptr = pop();
          auto unsafe_module_name =
             reinterpret_cast<char const*>(&m_bytecode.data()[module_name_ptr]);
 
-         if(std::strncmp(unsafe_module_name, "system", 6)) {
-            m_bytecode[dest_id_ptr] = SYSTEM_MOD_ID;
+         engine_trace("loadmodule name='%s'", unsafe_module_name);
+
+         if(std::strncmp(unsafe_module_name, "system", 7) == 0) {
+            push(SYSTEM_MOD_ID);
          } else {
+            push(88);
+            engine_trace("(loadmodule resolved=%d)", 88);
             // TODO: load modules
          }
 
-         engine_trace(
-            "loadmodule name=%s dest=%hu",
-            unsafe_module_name,
-            dest_id_ptr
-         );
       } break;
       default:
          engine_trace("<unknown %d>", op);
