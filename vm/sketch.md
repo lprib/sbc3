@@ -46,3 +46,11 @@ program
 - `$$123`: include raw hex word (LE) in program
 - `$123`: include raw hex byte in program
 - `123`: push 123 to stack
+
+# todo
+- [ ] if
+- [ ] comparisons
+- [ ] struct?
+- [ ] while/for
+- [ ] raylib backend
+- [ ] header files
