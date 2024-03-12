@@ -39,7 +39,7 @@ OPCODES = {
 }
 
 def compile(program: str) -> bytearray:
-    out = bytearray()
+    content = bytearray()
 
     labels = {}
     patchups = {}
@@ -59,82 +59,82 @@ def compile(program: str) -> bytearray:
         if not comment:
             # opcode word
             if word in OPCODES:
-                out.append(OPCODES[word])
+                content.append(OPCODES[word])
                 continue
 
             # push const
             try:
                 intword = int(word)
-                out.append(OPCODES["push"])
-                out.append(intword & 0xff)
-                out.append((intword >> 8) & 0xff)
+                content.append(OPCODES["push"])
+                content.append(intword & 0xff)
+                content.append((intword >> 8) & 0xff)
                 continue
             except ValueError:
                 pass
             
             # label
             if word.startswith(":"):
-                labels[word[1:]] = len(out)
+                labels[word[1:]] = len(content)
                 continue
             
             # string literal
             if word.startswith("\""):
                 for char in raw_word[1:]:
-                    out.append(ord(char))
-                out.append(0)
+                    content.append(ord(char))
+                content.append(0)
                 continue
 
             JUMP_IMM = "jump_imm."
             if word.startswith(JUMP_IMM):
                 label = word[len(JUMP_IMM):]
-                out.append(OPCODES["jump_imm"])
-                patchups[len(out)] = label
-                out.append(0)
-                out.append(0)
+                content.append(OPCODES["jump_imm"])
+                patchups[len(content)] = label
+                content.append(0)
+                content.append(0)
                 continue
 
             CALL_IMM = "call_imm."
             if word.startswith(CALL_IMM):
                 label = word[len(CALL_IMM):]
-                out.append(OPCODES["call_imm"])
-                patchups[len(out)] = label
-                out.append(0)
-                out.append(0)
+                content.append(OPCODES["call_imm"])
+                patchups[len(content)] = label
+                content.append(0)
+                content.append(0)
                 continue
 
             # push label value
             if word.startswith("."):
-                out.append(OPCODES["push"])
-                patchups[len(out)] = word[1:]
-                out.append(0) # insert space for patchup
-                out.append(0)
+                content.append(OPCODES["push"])
+                patchups[len(content)] = word[1:]
+                content.append(0) # insert space for patchup
+                content.append(0)
                 continue
             
             
             # short literal
             if word.startswith("##"):
                 intlit = int(word[2:])
-                out.append(intlit & 0xff)
-                out.append((intlit >> 8) & 0xff)
+                content.append(intlit & 0xff)
+                content.append((intlit >> 8) & 0xff)
                 continue
 
             # short literal
             if word.startswith("$$"):
                 intlit = int(word[2:], 16)
-                out.append(intlit & 0xff)
-                out.append((intlit >> 8) & 0xff)
+                content.append(intlit & 0xff)
+                content.append((intlit >> 8) & 0xff)
                 continue
 
             # byte literal
             if word.startswith("#"):
                 bytelit = int(word[1:])
-                out.append(bytelit & 0xff)
+                content.append(bytelit & 0xff)
                 continue
             
             # byte literal
             if word.startswith("$"):
                 bytelit = int(word[1:], 16)
-                out.append(bytelit & 0xff)
+                content.append(bytelit & 0xff)
                 continue
             
             MODULE_NAME = "@module:"
@@ -172,13 +172,28 @@ def compile(program: str) -> bytearray:
     for patchup_location, labelname in patchups.items():
         if labelname in labels:
             location = labels[labelname]
-            out[patchup_location] = location & 0xff
-            out[patchup_location+1] = (location >> 8) & 0xff
+            content[patchup_location] = location & 0xff
+            content[patchup_location+1] = (location >> 8) & 0xff
         else:
             print(f"undefined label {labelname}")
             exit(1)
+    
+    out = gen_header(module_name, resolved_exports)
+    out.extend(content)
 
     return out
+
+def gen_header(module_name, resolved_exports):
+    header = bytearray()
+    header.append(len(module_name))
+    header.extend(module_name.encode("ascii"))
+    header.append(len(resolved_exports))
+    for fn_name, fn_offset in resolved_exports.items():
+        header.append(len(fn_name))
+        header.extend(fn_name.encode("ascii"))
+        header.append(fn_offset)
+
+    return header
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
@@ -189,7 +204,7 @@ if __name__ == "__main__":
     # for b in compiled:
     #     print(int(b))
 
-    with open(sys.argv[2], "wb") as out:
-        out.write(compiled)
+    with open(sys.argv[2], "wb") as outfile:
+        outfile.write(compiled)
 
 
