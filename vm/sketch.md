@@ -9,30 +9,18 @@ you can call functions by index on module
 modules should have a header which defines the function offsets in a table
 
 
-libmymodule
-```
-@double
-@triple
-@get_magic_num
+# module structure
 
-:double 2 mul ;
-:triple 3 mul ;
-:get_magic_num 42 ;
-```
-
-
-program
-```
-:libmymodule_name "libmymodule
-:libmymodule #00
-
-:main
-    ( load the module )
-    .libmymodule_name loadmodule
-
-    .libmymodule 0 extern_call ( call first fn )
-;
-```
+| name            | size(bytes)     | description                             |
+| --------------- | --------------- | --------------------------------------- |
+| module_name_len | 1               | length in bytes of name to follow       |
+| module_name     | module_name_len | name data                               |
+| num_fns         | 1               | number of function entries to follow    |
+| **fn_entry[n]** |                 | **single function entry:**              |
+| fn_name_len[n]  | 1               | length in bytes of name to follow       |
+| fn_name[n]      | fn_name_len     | name data                               |
+| entry offset[n] | 2               | little endian offset from start of file |
+| data and code   |                 | data and code                           |
 
 # asm syntax
 - `<opcode name>`: add opcode to asm
@@ -46,6 +34,8 @@ program
 - `$$123`: include raw hex word (LE) in program
 - `$123`: include raw hex byte in program
 - `123`: push 123 to stack
+- `@module:name`: set the module name
+- `@export:label`: export the label
 
 # todo
 - [ ] if

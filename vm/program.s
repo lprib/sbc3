@@ -2,10 +2,14 @@
 ( .entry jump )
 
 ( this is an immediate jump, dest baked to program )
-jump_imm.entry
+( jump_imm.entry )
 
 ( todo: system module should be hardcoded to be module id 0, and dont need to
 load it )
+
+@module:program
+@export:entry
+@export:mul2
 
 :systemname "system
 :system ##99

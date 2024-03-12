@@ -43,6 +43,8 @@ def compile(program: str) -> bytearray:
 
     labels = {}
     patchups = {}
+    module_name = None
+    exports = []
 
     comment = 0
     for raw_word in filetext.split():
@@ -135,12 +137,38 @@ def compile(program: str) -> bytearray:
                 out.append(bytelit & 0xff)
                 continue
             
+            MODULE_NAME = "@module:"
+            if word.startswith(MODULE_NAME):
+                if module_name is not None:
+                    print("redefinition of module name")
+                    exit(1)
+                else:
+                    module_name = word[len(MODULE_NAME):]
+                continue
+
+            EXPORT = "@export:"
+            if word.startswith(EXPORT):
+                exports.append(word[len(EXPORT):])
+                continue
             
             print(f"bad word \"{word}\"")
             exit(1)
     
-    # print("labels", labels)
-    # print("patchups", patchups)
+    print("labels", labels)
+    print("patchups", patchups)
+    print("module_name", module_name)
+
+    resolved_exports = {}
+    for export in exports:
+        if export in labels:
+            resolved_exports[export] = labels[export]
+        else:
+            print(f"undefined label {labelname}")
+            exit(1)
+
+    print("resolved_exports", resolved_exports)
+
+
     for patchup_location, labelname in patchups.items():
         if labelname in labels:
             location = labels[labelname]
@@ -148,6 +176,7 @@ def compile(program: str) -> bytearray:
             out[patchup_location+1] = (location >> 8) & 0xff
         else:
             print(f"undefined label {labelname}")
+            exit(1)
 
     return out
 
