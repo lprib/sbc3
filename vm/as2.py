@@ -21,10 +21,10 @@ class LexerEof(Exception):
 
 
 class Lexer:
-    def __init__(self, text: str):
+    def __init__(self, text: str, starting_line=0):
         self.text = text
         self.idx = 0
-        self.current_line = 0
+        self.current_line = starting_line
 
     END_OF_WORD_CHARS = '#()"[]&'
 
@@ -118,7 +118,10 @@ class Lexer:
             elif nblk == "]":
                 blocklevel -= 1
                 if not blocklevel:
-                    return Token.BLOCK, block
+                    # chances are they're going to want to lex the contents of
+                    # this block, so might as well give them a Lexer straight
+                    # off the bat
+                    return Token.BLOCK, Lexer(block, starting_line=self.current_line)
                 else:
                     block += nblk
             else:
@@ -209,49 +212,9 @@ class Module:
         self.labels = {}
         self.patchups = {}
 
-        l = Lexer(text)
-        tok, data = l.next_token()
-        while tok != Token.EOF:
-            print(tok, data)
+        self.genlabel_counter = 0
 
-            if tok == Token.WORD:
-                self.compile_word(data)
-            elif tok == Token.LABEL:
-                self.trace(data + ":")
-                self.labels[data] = len(self.program)
-            elif tok == Token.SHORT_IMM:
-                self.trace(f"SHORT_IMM: {data}", 2)
-                self.program.append(data & 0xFF)
-                self.program.append((data >> 8) & 0xFF)
-            elif tok == Token.BYTE_IMM:
-                self.trace(f"BYTE_IMM: {data}")
-                self.program.append(data)
-            elif tok == Token.STRING_IMM:
-                self.trace(f"STRING_IMM: {data}", len(data)+1)
-                for char in data:
-                    self.program.append(ord(char))
-                self.program.append(0)
-            elif tok == Token.MACRO:
-                pass
-            elif tok == Token.BLOCK:
-                pass
-            elif tok == Token.ADDR_OF_WORD:
-                # push immediate label value
-                self.opcode("push")
-                self.trace(f"ADD_OF_WORD: {data}", 2)
-                self.patchups[len(self.program)] = data
-                self.program.append(0)
-                self.program.append(0)
-            elif tok == Token.EOF:
-                return
-            elif tok == Token.ERROR:
-                msg, line = data
-                print(f"Error on line {line}: {msg}")
-                exit(1)
-            else:
-                assert False
-
-            tok, data = l.next_token()
+        self.compile_lexer_contents(Lexer(text))
 
         print("labels", self.labels)
         print("patchups", self.patchups)
@@ -265,38 +228,125 @@ class Module:
                 print(f"undefined label {labelname}")
                 exit(1)
 
+    def compile_lexer_contents(self, lexer: Lexer):
+        tok, data = lexer.next_token()
+        while tok != Token.EOF:
+            print(tok, data)
+            self.compile_token(lexer, tok, data)
+            tok, data = lexer.next_token()
+
+    def compile_token(self, lexer: Lexer, tok: Token, data):
+        if tok == Token.WORD:
+            self.compile_word(data)
+        elif tok == Token.LABEL:
+            self.register_label_here(data)
+        elif tok == Token.SHORT_IMM:
+            self.trace(f"short_imm: {data}", 2)
+            self.program.append(data & 0xFF)
+            self.program.append((data >> 8) & 0xFF)
+        elif tok == Token.BYTE_IMM:
+            self.trace(f"byte_imm: {data}")
+            self.program.append(data)
+        elif tok == Token.STRING_IMM:
+            self.trace(f"string_imm: {data}", len(data) + 1)
+            for char in data:
+                self.program.append(ord(char))
+            self.program.append(0)
+        elif tok == Token.MACRO:
+            if data == "if":
+                self.if_macro(lexer)
+        elif tok == Token.BLOCK:
+            pass
+        elif tok == Token.ADDR_OF_WORD:
+            # push immediate label value
+            self.emit_opcode("push")
+            self.register_patch_of_resolved_label_here(data)
+            self.emit_short(f"add_of_word: {data}")
+        elif tok == Token.EOF:
+            return
+        elif tok == Token.ERROR:
+            msg, line = data
+            print(f"Error on line {line}: {msg}")
+            exit(1)
+        else:
+            assert False
+
     def compile_word(self, word):
         if word.lower() in OPCODES:
-            self.opcode(word.lower())
+            self.emit_opcode(word.lower())
             return
 
         try:
             intword = int(word)
-            self.opcode("push")
-            self.trace(f"SHORT_IMM: {intword}", 2)
-            self.program.append(intword & 0xFF)
-            self.program.append((intword >> 8) & 0xFF)
+            self.emit_opcode("push")
+            self.emit_short(f"short_imm: {intword}", value=intword)
             return
         except ValueError:
             pass
 
         if word in self.labels:
-            self.opcode("call_imm")
-            self.trace(f"CALL_TARGET: {word}", 2)
-            self.patchups[len(self.program)] = word
-            self.program.append(0)
-            self.program.append(0)
+            self.emit_opcode("call_imm")
+            self.register_patch_of_resolved_label_here(word)
+            self.emit_short(f"call_target: {word}")
             return
 
-    def opcode(self, opcode):
+    def if_macro(self, lexer: Lexer):
+        ifblock_tok, ifblock_lexer = lexer.next_token()
+        # todo need to associate span with each token so we can pinpoint errors
+        assert ifblock_tok == Token.BLOCK
+        elseblock_tok, elseblock_lexer = lexer.next_token()
+        # todo need to associate span with each token so we can pinpoint errors
+        assert elseblock_tok == Token.BLOCK
+
+        # generate label names to not clash
+        else_label = self.generate_label_name("else")
+        end_label = self.generate_label_name("end")
+
+        # branch false to else branch
+        self.emit_opcode("bfalse_imm")
+        self.register_patch_of_resolved_label_here(else_label)
+        self.emit_short(f"branch_target: {else_label}")
+
+        # paste if block
+        self.compile_lexer_contents(ifblock_lexer)
+
+        # at end of if block, jump over else block
+        self.emit_opcode("jump_imm")
+        self.register_patch_of_resolved_label_here(end_label)
+        self.emit_short(f"branch_target: {end_label}")
+
+        # paste else block
+        self.register_label_here(else_label)
+        self.compile_lexer_contents(elseblock_lexer)
+
+        self.register_label_here(end_label)
+
+    def register_patch_of_resolved_label_here(self, label_name):
+        self.patchups[len(self.program)] = label_name
+
+    def register_label_here(self, label_name):
+        self.trace(label_name + ":")
+        self.labels[label_name] = len(self.program)
+
+    def emit_opcode(self, opcode):
         self.trace(opcode)
         self.program.append(OPCODES[opcode])
+
+    # little endian
+    def emit_short(self, tracetext, value=0):
+        self.trace(tracetext, 2)
+        self.program.append(value & 0xFF)
+        self.program.append((value >> 8) & 0xFF)
 
     def trace(self, message, proglen=1):
         self.tracetext += f"{len(self.program)}"
         if proglen != 1:
             self.tracetext += f"-{len(self.program) + proglen - 1}"
         self.tracetext += f": {message}\n"
+
+    def generate_label_name(self, name):
+        self.genlabel_counter += 1
+        return f"__generated_{name}_{self.genlabel_counter}"
 
 
 if __name__ == "__main__":

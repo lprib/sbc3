@@ -173,6 +173,17 @@ The `if!` macro handler can take control of the compilation and decide to
     were pasted in to the program at that point
 
 
+compile:
+```
+1 if!
+[ (if block) ]
+[ (else block)]
+
+...
+1 jumpfalse &generated_else_label
+```
+
+
 ## generalizing macro structure
 Maybe have rust-like macros where the macro can expect arbitrary tokens on input
 that can be transformed
