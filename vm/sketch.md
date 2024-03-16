@@ -22,7 +22,7 @@ modules should have a header which defines the function offsets in a table
 | entry offset[n] | 2               | little endian offset from start of file |
 | data and code   |                 | data and code                           |
 
-# asm syntax
+# asm syntax (outdated)
 - `<opcode name>`: add opcode to asm
 - `:label`: label points to current place in program
 - `"string`: add zero-term string to program at current position
@@ -128,6 +128,76 @@ call![label]
 module!(mymodule)
 export!(myfunction)
 ```
+
+# macros
+## if
+```
+if![
+    [ (if branch) ]
+    [ (else branch) ]
+]
+```
+will currently get lexed as
+```
+MACRO "if"
+BLOCK "[ (if branch) ] [ (else branch) ]"
+```
+
+there should be a macro handler registered for `if` that feeds the next BLOCK
+into another lexer. The output of _that_ lexer would be
+
+```
+BLOCK "[ (if branch) ]"
+BLOCK "[ (else branch) ]"
+```
+
+Which again needs to be recursively expanded and pasted in alongside some jump
+instructions.
+
+
+If we abstract out `Module.compile_next_token` or similar, we don't even need
+the surrounding block and can write if like this
+```
+if!  [
+    (if block)
+] else [
+    (else block)
+]
+```
+
+The `if!` macro handler can take control of the compilation and decide to
+1. Get the next token from lexer, assert it is block and store
+2. Get next token, assert it is word == "else"
+3. Get the next token from lexer, assert it is block and store
+4. Compile the jump structure and interlace with compiling the blocks as if they
+    were pasted in to the program at that point
+
+
+## generalizing macro structure
+Maybe have rust-like macros where the macro can expect arbitrary tokens on input
+that can be transformed
+```
+defmacro! if [ $ifblock else $elseblock ] => [
+    &elselabel jumpfalse 
+    $ifblock
+    &exitlabel jump
+elselabel:
+    $elseblock
+exitlabel:
+]
+```
+In that case `$ifblock` will expect an arbitrary token (and expand if it's a
+block), `else` will expect that specific syntax, and `$elseblock` will expect
+token.
+
+## do
+```
+do! 1 5 [
+    (do things)
+]
+```
+
+
 
 # todo
 - [ ] if
