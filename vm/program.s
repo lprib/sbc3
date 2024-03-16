@@ -14,14 +14,14 @@ load it )
 :systemname "system
 :system ##99
 
-:mul2 2 mul ;
+:mul2 2 * ;
 
 :entry
     .systemname load_module
     .system !
     
-    1 1 add 3 mul
-    .system * 0 extern_call
+    1 1 + 3 *
+    .system @ 0 extern_call
 
     4 call_imm.mul2 call_imm.mul2 call_imm.mul2
 

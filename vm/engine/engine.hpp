@@ -11,13 +11,12 @@ class Engine;
 
 using Intrinsic = void (*)(Engine& engine);
 
-class Engine {
+template<size_t SIZE>
+class Stack {
 public:
-   Engine(std::span<Intrinsic> intrinsics) :
-      m_intrinsics(intrinsics),
-      m_stack(),
-      m_return_stack() {}
-   void execute_module(std::span<unsigned char> bytecode);
+   StackWord peek() const {
+      return m_stack[m_sp - 1];
+   }
 
    StackWord pop() {
       --m_sp;
@@ -28,16 +27,17 @@ public:
       m_stack[m_sp] = n;
       ++m_sp;
    }
+private:
+   std::array<StackWord, SIZE> m_stack;
+};
 
-   StackWord rpop() {
-      --m_rsp;
-      return m_return_stack[m_rsp];
-   }
-
-   void rpush(StackWord n) {
-      m_return_stack[m_rsp] = n;
-      ++m_rsp;
-   }
+class Engine {
+public:
+   Engine(std::span<Intrinsic> intrinsics) :
+      m_intrinsics(intrinsics),
+      m_stack(),
+      m_return_stack() {}
+   void execute_module(std::span<unsigned char> bytecode);
 
    StackWord nextDataWord() {
       StackWord out =
@@ -54,9 +54,10 @@ private:
    int m_sp = 0;
    int m_rsp = 0;
 
+   Stack<STACK_SIZE> m_stack;
+   Stack<RETURN_STACK_SIZE> m_return_stack;
+
    std::span<unsigned char> m_bytecode;
-   std::array<StackWord, STACK_SIZE> m_stack;
-   std::array<StackWord, RETURN_STACK_SIZE> m_return_stack;
    std::span<Intrinsic> m_intrinsics;
 };
 } // namespace engine

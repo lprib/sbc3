@@ -3,10 +3,10 @@ import sys
 
 OPCODES = {
     "nop": 0,
-    "add": 1, # (n n -- n)
-    "sub": 2,
-    "mul": 3,
-    "div": 4,
+    "+": 1, # (n n -- n)
+    "-": 2,
+    "*": 3,
+    "/": 4,
     # (n ip ip --)
     "if": 5,
     # (ip --)
@@ -20,7 +20,7 @@ OPCODES = {
     "extern_call": 9, # (moduleid fn# --)
 
     "loadword": 10,
-    "*": 10,
+    "@": 10,
 
     "storeword": 11,
     "!": 11,
@@ -36,6 +36,30 @@ OPCODES = {
 
     "jump_imm": 16,
     "call_imm": 17,
+
+    "dup": 18,
+    "swap": 19,
+    "drop": 20,
+    "over": 21,
+    "rot": 22,
+    "dup2": 23,
+    "swap2": 24,
+    "over2": 25,
+    "drop2": 26,
+
+    "btrue": 27,
+    "btrue_imm": 28,
+    "bfalse": 29,
+    "bfalse_imm": 30,
+
+    ">4": 31,
+    "rpush": 31,
+
+    "r>": 32,
+    "rpop": 32,
+
+    "r@": 33,
+    "rcopy": 33,
 }
 
 def compile(program: str) -> bytearray:
