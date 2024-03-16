@@ -1,30 +1,10 @@
-( this is a computed jump, push label address then jump to it )
-( .entry jump )
+systemname: "system"
+system: #0
 
-( this is an immediate jump, dest baked to program )
-( jump_imm.entry )
+mul2: 2 * ;
 
-( todo: system module should be hardcoded to be module id 0, and dont need to
-load it )
-
-@module:program
-@export:entry
-@export:mul2
-
-:systemname "system
-:system ##99
-
-:mul2 2 * ;
-
-:entry
-    .systemname load_module
-    .system !
-    
-    1 1 + 3 *
-    .system @ 0 extern_call
-
-    4 call_imm.mul2 call_imm.mul2 call_imm.mul2
-
-    ( system should always be module 0 )
-    0 0 extern_call
-( ; )
+entry:
+    &systemname load_module
+    &system ! (todo: if a label is declared in data, default to pushing address
+    rather than calling)
+    &system @ 0 extern_call

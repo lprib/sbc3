@@ -100,6 +100,19 @@ do![0 10 [ hello print ]]
 
 When encountering `{`, fully macro expand the code within before storing it to `$body`.
 
+# forward decls
+```
+decl![myfunc]
+
+entry:
+    myfunc (patchups[here] = myfunc)
+    ret
+
+myfunc:
+    10 print
+    ret
+```
+
 # With a better parser
 ```
 (comments without spaces)
