@@ -6,36 +6,9 @@
 #include <string_view>
 #include <vector>
 
+#include "engine_common.hpp"
+
 namespace vm {
-
-enum class Error {
-   InvalidHeader,
-};
-
-using StackWord = short;
-
-class Stack {
-public:
-   Stack(int size) : m_stack(size, 0), m_sp(0) {}
-
-   StackWord peek() const {
-      return m_stack[m_sp - 1];
-   }
-
-   StackWord pop() {
-      --m_sp;
-      return m_stack[m_sp];
-   }
-
-   void push(StackWord n) {
-      m_stack[m_sp] = n;
-      ++m_sp;
-   }
-
-private:
-   std::vector<StackWord> m_stack;
-   int m_sp = 0;
-};
 
 class Module {
 public:
@@ -72,17 +45,12 @@ public:
    }
 
 private:
-   static constexpr int STACK_SIZE = 0x100;
-   static constexpr int RETURN_STACK_SIZE = 0x80;
-
    /// @brief local copy of bytecode
    ///
    /// NOTE: Be careful not to re-allocate this, since the string_views are
    /// references pointing in to this
    std::vector<unsigned char> m_bytecode;
    int m_code_start_index;
-   Stack m_stack;
-   Stack m_return_stack;
 
    /// @brief module name, view into m_bytecode
    std::string_view m_module_name;
@@ -94,11 +62,6 @@ private:
       std::vector<unsigned char> bytecode, std::string_view module_name,
       std::vector<ExportFunction> exports, int code_start_index
    );
-};
-
-class Machine {
-   public:
-   private:
 };
 
 } // namespace vm

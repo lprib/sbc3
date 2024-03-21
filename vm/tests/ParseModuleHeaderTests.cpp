@@ -1,4 +1,4 @@
-#include "vm.hpp"
+#include "Module.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <vector>

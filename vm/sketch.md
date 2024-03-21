@@ -208,6 +208,57 @@ do! 1 5 [
 ]
 ```
 
+# module implementation
+``` 
+loadmodule: ( nameptr -- id )
+external_call: ( [args] id fn_nameptr -- [retargs] )
+```
+
+```
+mymod_name: "mymod"
+mymod: #0
+
+dtt: "do_the_thing"
+
+
+entry:
+    &mymod_name loadmodule ( -- mymod_id )
+    mymod !
+
+    1 2 (args)
+    mymod @ dtt extern_call
+    ( now n from mymod below is on the stack )
+```
+
+mymod:
+```
+module_name! "mymod"
+export! do_the_thing
+
+do_the_thing: ( n n -- n )
+    + 2 *
+;
+```
+
+Need `IModule` which bytecode modules can implement as well as C++ modules
+(libraries).
+
+On a normal intra-module call, we push the program counter (must be less than
+32k or 0x7fff_ffff). We can then pop as normal (fast path).
+
+On an inter-module call (call_ext), we first push the id of the current module,
+then we push the current PC within that module with the high bit set.
+
+On _any_ return (inter or intra module), we
+1. pop from return stack into `ret_pc`
+2. check the high bit
+3. if not set: jump to `ret_pc`
+4. if set: pop the next value into `module_id`
+5. load `module_id`
+6. Mask off the top bit of `ret_pc`
+7. jump to `ret_pc` within that module
+
+For the VM, there is always only one stack, return stack, and PC
 
 
 # todo

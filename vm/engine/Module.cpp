@@ -1,4 +1,4 @@
-#include "vm.hpp"
+#include "Module.hpp"
 
 #include <iostream>
 #include <optional>
@@ -11,8 +11,6 @@ Module::Module(
 ) :
    m_bytecode(std::move(bytecode)),
    m_code_start_index(code_start_index),
-   m_stack(STACK_SIZE),
-   m_return_stack(RETURN_STACK_SIZE),
    m_module_name(module_name),
    m_exports(std::move(exports)) {}
 
