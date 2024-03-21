@@ -58,13 +58,17 @@ public:
       }
    }
 
-   std::optional<ExportFunction> get_export(std::string_view name) {
+   std::optional<ExportFunction> get_export(std::string_view name) const {
       for(auto const& exp : m_exports) {
          if(exp.name == name) {
             return exp;
          }
       }
       return std::nullopt;
+   }
+
+   unsigned char code_byte(int index) const {
+      return m_bytecode[m_code_start_index + index];
    }
 
 private:
@@ -76,6 +80,7 @@ private:
    /// NOTE: Be careful not to re-allocate this, since the string_views are
    /// references pointing in to this
    std::vector<unsigned char> m_bytecode;
+   int m_code_start_index;
    Stack m_stack;
    Stack m_return_stack;
 
@@ -87,9 +92,13 @@ private:
 
    Module(
       std::vector<unsigned char> bytecode, std::string_view module_name,
-      std::vector<ExportFunction> exports
+      std::vector<ExportFunction> exports, int code_start_index
    );
 };
 
-class Machine {};
+class Machine {
+   public:
+   private:
+};
+
 } // namespace vm

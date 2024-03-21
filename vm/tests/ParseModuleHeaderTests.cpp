@@ -1,7 +1,7 @@
+#include "vm.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
-#include "vm.hpp"
 
 using namespace std::string_view_literals;
 
@@ -23,6 +23,8 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
       'w',  'o', 'w',
       0x01, // export offset LSB
       0x00, // export offset MSB
+
+      0xEE, // first byte of data/code
    };
 
    auto result = vm::Module::load(module_buf);
@@ -45,6 +47,8 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
    ASSERT_TRUE(exp2.has_value());
    EXPECT_EQ(exp2->name, "wow"sv);
    EXPECT_EQ(exp2->bytecode_offset, 1);
+
+   EXPECT_EQ(mod.code_byte(0), 0xEE);
 }
 
 TEST(ParseModuleHeader, SingleByteHeader_Fails) {
@@ -73,11 +77,14 @@ TEST(ParseModuleHeader, ExportByName_RetrievesExports) {
       0xCD, // export offset LSB
       0xAB, // export offset MSB
       2,    // export name len
-      'q',  'r',
+      'q',
+      'r',
       0x23, // export offset LSB
       0x01, // export offset MSB
       3,    // export name len
-      'w',  'o', 'w',
+      'w',
+      'o',
+      'w',
       0xDE, // export offset LSB
       0xC0, // export offset MSB
    };

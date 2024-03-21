@@ -7,9 +7,10 @@ namespace vm {
 
 Module::Module(
    std::vector<unsigned char> bytecode, std::string_view module_name,
-   std::vector<ExportFunction> exports
+   std::vector<ExportFunction> exports, int code_start_index
 ) :
    m_bytecode(std::move(bytecode)),
+   m_code_start_index(code_start_index),
    m_stack(STACK_SIZE),
    m_return_stack(RETURN_STACK_SIZE),
    m_module_name(module_name),
@@ -67,7 +68,12 @@ std::expected<Module, Error> Module::load(std::span<unsigned char> bytecode) {
       exports.push_back(ExportFunction(fn_name, fn_offset));
    }
 
-   return Module(std::move(bytecode_copy), module_name, std::move(exports));
+   return Module(
+      std::move(bytecode_copy),
+      module_name,
+      std::move(exports),
+      cursor
+   );
 }
 
 } // namespace vm
