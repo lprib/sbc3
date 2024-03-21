@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 from enum import Enum
-import sys
-
+import argparse
 
 class Token(Enum):
     WORD = 1
@@ -195,24 +194,31 @@ OPCODES = {
     "btrue_imm": 28,
     "bfalse": 29,
     "bfalse_imm": 30,
-    ">4": 31,
+    ">r": 31,
     "rpush": 31,
     "r>": 32,
     "rpop": 32,
     "r@": 33,
     "rcopy": 33,
+    ">": 34,
+    "<": 35,
+    ">=": 36,
+    "<=": 37,
+    "==": 38,
+    "!=": 39,
 }
 
 
 class Module:
     def __init__(self, text: str):
         self.program = bytearray()
-
         self.tracetext = ""
         self.labels = {}
         self.patchups = {}
-
         self.genlabel_counter = 0
+        self.module_name = None
+        self.exports = []
+        self.resolved_exports = {}
 
         self.compile_lexer_contents(Lexer(text))
 
@@ -227,6 +233,19 @@ class Module:
             else:
                 print(f"undefined label {labelname}")
                 exit(1)
+
+        # look up the final resting place of our declared exported symbols
+        for export in self.exports:
+            if export in self.labels:
+                self.resolved_exports[export] = self.labels[export]
+            else:
+                print(f"undefined label for export: {labelname}")
+                exit(1)
+
+    def bytecode(self) -> bytearray:
+        bytecode = self.generate_header()
+        bytecode.extend(self.program)
+        return bytecode
 
     def compile_lexer_contents(self, lexer: Lexer):
         tok, data = lexer.next_token()
@@ -255,6 +274,10 @@ class Module:
         elif tok == Token.MACRO:
             if data == "if":
                 self.if_macro(lexer)
+            elif data == "module_name":
+                self.module_name_macro(lexer)
+            elif data == "export":
+                self.export_macro(lexer)
         elif tok == Token.BLOCK:
             pass
         elif tok == Token.ADDR_OF_WORD:
@@ -289,6 +312,16 @@ class Module:
             self.register_patch_of_resolved_label_here(word)
             self.emit_short(f"call_target: {word}")
             return
+
+    def module_name_macro(self, lexer: Lexer):
+        tok, data = lexer.next_token()
+        assert tok == Token.STRING_IMM
+        self.module_name = data
+
+    def export_macro(self, lexer: Lexer):
+        tok, data = lexer.next_token()
+        assert tok == Token.WORD
+        self.exports.append(data)
 
     def if_macro(self, lexer: Lexer):
         ifblock_tok, ifblock_lexer = lexer.next_token()
@@ -348,13 +381,33 @@ class Module:
         self.genlabel_counter += 1
         return f"__generated_{name}_{self.genlabel_counter}"
 
+    def generate_header(self):
+        header = bytearray()
+        if self.module_name is None:
+            print("no module_name!")
+            exit(1)
+        header.append(len(self.module_name))
+        header.extend(self.module_name.encode("ascii"))
+        header.append(len(self.resolved_exports))
+        for fn_name, fn_offset in self.resolved_exports.items():
+            header.append(len(fn_name))
+            header.extend(fn_name.encode("ascii"))
+            header.append(fn_offset & 0xff)
+            header.append((fn_offset >> 8) & 0xff)
+
+        return header
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        exit(1)
-    filetext = open(sys.argv[1]).read()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input")
+    parser.add_argument("output")
+
+    args = parser.parse_args()
+
+    filetext = open(args.input).read()
 
     m = Module(filetext)
-    print(m.tracetext)
-    for p in m.program:
-        print(p)
+
+    with open(args.output, "wb") as outfile:
+        outfile.write(m.bytecode())

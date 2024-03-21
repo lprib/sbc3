@@ -18,3 +18,4 @@ IndentExternBlock: NoIndent
 IndentAccessModifiers: false
 AccessModifierOffset: -3
 PenaltyReturnTypeOnItsOwnLine: 200
+AlignArrayOfStructures: None

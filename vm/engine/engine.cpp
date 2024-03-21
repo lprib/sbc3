@@ -36,17 +36,18 @@ enum Opcode {
 
 #define BINOP(_opcode, _op)                                                    \
    case Opcode::_opcode: {                                                     \
-      auto r = m_stack.pop();                                                          \
-      auto l = m_stack.pop();                                                          \
+      auto r = m_stack.pop();                                                  \
+      auto l = m_stack.pop();                                                  \
       engine_trace(#_opcode " %hu %hu", l, r);                                 \
-      m_stack.push(r _op l);                                                           \
+      m_stack.push(r _op l);                                                   \
    } break
 
 static constexpr StackWord SYSTEM_MOD_ID = 0;
 
-void Engine::execute_module(std::span<unsigned char> bytecode) {
+void Engine::execute_module(std::span<unsigned char const> bytecode) {
    m_bytecode = bytecode;
-   m_pc = 0;
+
+   parse_module_header();
 
    int pc = 0;
    int index = 0;
@@ -166,4 +167,10 @@ void Engine::execute_module(std::span<unsigned char> bytecode) {
       }
    }
 }
+
+void Engine::parse_module_header()
+{
+
+}
+
 } // namespace engine
