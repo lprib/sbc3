@@ -44,8 +44,7 @@ public:
       int bytecode_offset;
    };
 
-   static std::expected<Module, Error> load(std::span<unsigned char> bytecode
-   );
+   static std::expected<Module, Error> load(std::span<unsigned char> bytecode);
 
    std::string_view name() const {
       return m_module_name;
@@ -59,14 +58,23 @@ public:
       }
    }
 
+   std::optional<ExportFunction> get_export(std::string_view name) {
+      for(auto const& exp : m_exports) {
+         if(exp.name == name) {
+            return exp;
+         }
+      }
+      return std::nullopt;
+   }
+
 private:
    static constexpr int STACK_SIZE = 0x100;
    static constexpr int RETURN_STACK_SIZE = 0x80;
 
    /// @brief local copy of bytecode
    ///
-   /// Be careful not to re-allocate this, since the string_views are references
-   /// in to this
+   /// NOTE: Be careful not to re-allocate this, since the string_views are
+   /// references pointing in to this
    std::vector<unsigned char> m_bytecode;
    Stack m_stack;
    Stack m_return_stack;
