@@ -2,10 +2,13 @@ add_library(engine)
 
 target_sources(engine
 PRIVATE
-    Module.cpp
-    Module.hpp
+    BytecodeModule.cpp
+    BytecodeModule.hpp
+    IPlatform.hpp
+    ISystemModule.hpp
     Machine.cpp
     Machine.hpp
+    Stack.hpp
     engine_common.hpp
 )
 

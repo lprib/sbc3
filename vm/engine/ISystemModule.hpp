@@ -5,13 +5,14 @@
 namespace vm {
 
 class ISystemModule {
-   /// @brief get registered name of this module
-   virtual std::string_view name() = 0;
+public:
+   ISystemModule(std::string_view name) : m_module_name(name) {}
 
-   /// @brief call a function from this module
-   /// @param name name of function to invoke
-   /// @return whether the function was found
-   virtual bool invoke(std::string_view name) = 0;
+   std::string_view name() const {
+      return m_module_name;
+   }
+
+private:
+   std::string_view m_module_name;
 };
-
 } // namespace vm

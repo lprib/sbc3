@@ -1,74 +1,87 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 
+#include "BytecodeModule.hpp"
+#include "IPlatform.hpp"
 #include "ISystemModule.hpp"
-#include "Module.hpp"
+#include "Stack.hpp"
 
 namespace vm {
 
 using StackWord = short;
 
-class Stack {
-public:
-   Stack(int size) : m_stack(size, 0), m_sp(0) {}
-
-   StackWord peek() const {
-      return m_stack[m_sp - 1];
-   }
-
-   StackWord peek_n(int n) const {
-      return m_stack[m_sp - 1 - n];
-   }
-
-   StackWord pop() {
-      --m_sp;
-      return m_stack[m_sp];
-   }
-
-   void push(StackWord n) {
-      m_stack[m_sp] = n;
-      ++m_sp;
-   }
-
-private:
-   std::vector<StackWord> m_stack;
-   int m_sp = 0;
-};
-
-using LoadModuleCallback = std::optional<Module> (*)(std::string_view name);
-
 class Machine {
 public:
-   Machine(LoadModuleCallback load_module_callback) :
+   Machine(IPlatform& platform) :
       m_stack(STACK_SIZE),
       m_return_stack(RETURN_STACK_SIZE),
       m_pc(0),
-      m_load_module_callback(load_module_callback) {}
+      m_platform(platform) {}
+
+   std::optional<Error> execute(std::string_view module_name);
 
    /// @brief Add system module
    /// @param system_module Module to add. Reference must outlive this Machine
-   void add_system_module(ISystemModule& system_module) {
+   void add_system_module(ISystemModule* system_module) {
       m_system_modules.push_back(system_module);
    }
+
+   /// @brief Get index of module from name. Does not load it if it doesn't
+   /// exist
+   /// @param name
+   /// @return index if found, otherwise -1
+   int module_index_by_name(std::string_view name) {
+      for(int i = 0; i < m_modules.size(); ++i) {
+         if(m_modules[i].name() == name) {
+            return i;
+         }
+      }
+      return -1;
+   }
+
+   /// @brief get the module, or load it from platform
+   /// @param name name
+   /// @return index if found, otherwise -1
+   int get_or_load_module(std::string_view name);
 
 private:
    static constexpr int STACK_SIZE = 0x100;
    static constexpr int RETURN_STACK_SIZE = 0x100;
 
-   Stack m_stack;
-   Stack m_return_stack;
+   Stack<StackWord> m_stack;
+   Stack<StackWord> m_return_stack;
    int m_pc;
+   int m_current_module_idx = -1;
 
-   // TODO: when interpreting `loadmodule`, we need some way to differentiate
-   // between a user module ID and a system module ID. either encode as a high
-   // bit, or have a single array holding all and generalize IModule to cover
-   // both types.
+   std::vector<BytecodeModule> m_modules;
+   std::vector<ISystemModule*> m_system_modules;
 
-   std::vector<Module> m_modules;
-   std::vector<ISystemModule&> m_system_modules;
+   IPlatform& m_platform;
+   std::optional<Error> m_errorno;
 
-   LoadModuleCallback m_load_module_callback;
+   bool instr();
+
+   std::vector<unsigned char>& current_code() {
+      return m_modules[m_current_module_idx].code();
+   }
+
+   unsigned char pop_progmem() {
+      // todo that's a lot of lookup for one bit of program memory
+      auto out = m_modules[m_current_module_idx].code_byte(m_pc);
+      ++m_pc;
+      return out;
+   }
+
+   StackWord pop_progmem_word() {
+      auto& code = current_code();
+      // little endian
+      StackWord out =
+         static_cast<StackWord>(code[m_pc] | (code[m_pc + 1] << 8));
+      m_pc += 2;
+      return out;
+   }
 };
 
 } // namespace vm

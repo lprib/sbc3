@@ -1,4 +1,4 @@
-#include "Module.hpp"
+#include "BytecodeModule.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
@@ -27,7 +27,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
       0xEE, // first byte of data/code
    };
 
-   auto result = vm::Module::load(module_buf);
+   auto result = vm::BytecodeModule::load(module_buf);
    ASSERT_TRUE(result.has_value());
    auto mod = *result;
 
@@ -54,7 +54,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
 TEST(ParseModuleHeader, SingleByteHeader_Fails) {
    std::vector<unsigned char> module_buf = {0};
 
-   auto result = vm::Module::load(module_buf);
+   auto result = vm::BytecodeModule::load(module_buf);
    EXPECT_FALSE(result.has_value());
    EXPECT_EQ(result.error(), vm::Error::InvalidHeader);
 }
@@ -62,7 +62,7 @@ TEST(ParseModuleHeader, SingleByteHeader_Fails) {
 TEST(ParseModuleHeader, WrongModuleNameLength_Fails) {
    std::vector<unsigned char> module_buf = {3, 'a', 'b'};
 
-   auto result = vm::Module::load(module_buf);
+   auto result = vm::BytecodeModule::load(module_buf);
    EXPECT_FALSE(result.has_value());
    EXPECT_EQ(result.error(), vm::Error::InvalidHeader);
 }
@@ -89,7 +89,7 @@ TEST(ParseModuleHeader, ExportByName_RetrievesExports) {
       0xC0, // export offset MSB
    };
 
-   auto result = vm::Module::load(module_buf);
+   auto result = vm::BytecodeModule::load(module_buf);
    ASSERT_TRUE(result.has_value());
    auto exp = result->get_export("wow"sv);
    ASSERT_TRUE(exp.has_value());

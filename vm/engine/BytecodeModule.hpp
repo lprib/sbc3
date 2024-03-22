@@ -10,14 +10,16 @@
 
 namespace vm {
 
-class Module {
+class BytecodeModule {
 public:
    struct ExportFunction {
       std::string_view name;
       int bytecode_offset;
    };
 
-   static std::expected<Module, Error> load(std::span<unsigned char> bytecode);
+   static std::expected<BytecodeModule, Error> load(
+      std::span<unsigned char> bytecode
+   );
 
    std::string_view name() const {
       return m_module_name;
@@ -44,12 +46,22 @@ public:
       return m_bytecode[m_code_start_index + index];
    }
 
+   std::vector<unsigned char>& code() {
+      return m_bytecode;
+   }
+
+   int code_start_index() const {
+      return m_code_start_index;
+   }
+
 private:
    /// @brief local copy of bytecode
    ///
    /// NOTE: Be careful not to re-allocate this, since the string_views are
    /// references pointing in to this
    std::vector<unsigned char> m_bytecode;
+
+   /// @brief index of code (skipping header)
    int m_code_start_index;
 
    /// @brief module name, view into m_bytecode
@@ -58,7 +70,7 @@ private:
    /// @brief exports names, view into m_bytecode
    std::vector<ExportFunction> m_exports;
 
-   Module(
+   BytecodeModule(
       std::vector<unsigned char> bytecode, std::string_view module_name,
       std::vector<ExportFunction> exports, int code_start_index
    );

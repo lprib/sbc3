@@ -1,11 +1,11 @@
-#include "Module.hpp"
+#include "BytecodeModule.hpp"
 
 #include <iostream>
 #include <optional>
 
 namespace vm {
 
-Module::Module(
+BytecodeModule::BytecodeModule(
    std::vector<unsigned char> bytecode, std::string_view module_name,
    std::vector<ExportFunction> exports, int code_start_index
 ) :
@@ -14,7 +14,9 @@ Module::Module(
    m_module_name(module_name),
    m_exports(std::move(exports)) {}
 
-std::expected<Module, Error> Module::load(std::span<unsigned char> bytecode) {
+std::expected<BytecodeModule, Error> BytecodeModule::load(
+   std::span<unsigned char> bytecode
+) {
    std::size_t cursor = 0;
 
    std::vector<unsigned char> bytecode_copy(bytecode.begin(), bytecode.end());
@@ -52,7 +54,7 @@ std::expected<Module, Error> Module::load(std::span<unsigned char> bytecode) {
          return std::unexpected(Error::InvalidHeader);
 
       auto fn_name = std::string_view(
-         reinterpret_cast<char*>(&bytecode_copy.data()[cursor]),
+         reinterpret_cast<char const*>(&bytecode_copy.data()[cursor]),
          fn_name_len
       );
       cursor += fn_name_len;
@@ -66,7 +68,7 @@ std::expected<Module, Error> Module::load(std::span<unsigned char> bytecode) {
       exports.push_back(ExportFunction(fn_name, fn_offset));
    }
 
-   return Module(
+   return BytecodeModule(
       std::move(bytecode_copy),
       module_name,
       std::move(exports),

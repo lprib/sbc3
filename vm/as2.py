@@ -2,6 +2,7 @@
 from enum import Enum
 import argparse
 
+
 class Token(Enum):
     WORD = 1
     LABEL = 2
@@ -156,56 +157,56 @@ class Lexer:
 
 OPCODES = {
     "nop": 0,
-    "+": 1,  # (n n -- n)
+    "+": 1,
     "-": 2,
     "*": 3,
     "/": 4,
-    # (n ip ip --)
-    "if": 5,
-    # (ip --)
-    "jump": 6,
-    # (ip --)
-    "call": 7,
-    "return": 8,
-    ";": 8,
-    "extern_call": 9,  # (moduleid fn# --)
-    "loadword": 10,
-    "@": 10,
-    "storeword": 11,
-    "!": 11,
-    "push": 12,
-    "load_module": 13,
-    "loadbyte": 14,
-    "*b": 14,
-    "storebyte": 15,
-    "!b": 15,
+    "%": 5,
+    ">>": 6,
+    "<<": 7,
+    "~": 8,
+    ">": 9,
+    "<": 10,
+    ">=": 11,
+    "<=": 12,
+    "==": 13,
+    "!=": 14,
+    "jump": 15,
     "jump_imm": 16,
-    "call_imm": 17,
-    "dup": 18,
-    "swap": 19,
-    "drop": 20,
-    "over": 21,
-    "rot": 22,
-    "dup2": 23,
-    "swap2": 24,
-    "over2": 25,
-    "drop2": 26,
-    "btrue": 27,
-    "btrue_imm": 28,
-    "bfalse": 29,
-    "bfalse_imm": 30,
-    ">r": 31,
-    "rpush": 31,
-    "r>": 32,
-    "rpop": 32,
-    "r@": 33,
-    "rcopy": 33,
-    ">": 34,
-    "<": 35,
-    ">=": 36,
-    "<=": 37,
-    "==": 38,
-    "!=": 39,
+    "call": 17,
+    "call_imm": 18,
+    "btrue": 19,
+    "btrue_imm": 20,
+    "bfalse": 21,
+    "bfalse_imm": 22,
+    "return": 23,
+    ";": 23,  # alias
+    "load_module": 24,
+    "extern_call": 25,
+    "loadword": 26,
+    "@": 26,  # alias
+    "storeword": 27,
+    "!": 27,  # alias
+    "push_imm": 28,
+    "dup": 29,
+    "swap": 30,
+    "drop": 31,
+    "over": 32,
+    "rot": 33,
+    "dup2": 34,
+    "swap2": 35,
+    "over2": 36,
+    "drop2": 37,
+    "rpush": 42,
+    ">r": 42,  # alias
+    "rpop": 43,
+    "r>": 43,  # alias
+    "rcopy": 44,
+    "r@": 44,  # alias
+    # "loadbyte": 14,
+    # "*b": 14,
+    # "storebyte": 15,
+    # "!b": 15,
 }
 
 
@@ -220,7 +221,10 @@ class Module:
         self.exports = []
         self.resolved_exports = {}
 
+        lexer = Lexer(text)
         self.compile_lexer_contents(Lexer(text))
+
+        print(self.tracetext)
 
         print("labels", self.labels)
         print("patchups", self.patchups)
@@ -282,7 +286,7 @@ class Module:
             pass
         elif tok == Token.ADDR_OF_WORD:
             # push immediate label value
-            self.emit_opcode("push")
+            self.emit_opcode("push_imm")
             self.register_patch_of_resolved_label_here(data)
             self.emit_short(f"add_of_word: {data}")
         elif tok == Token.EOF:
@@ -301,7 +305,7 @@ class Module:
 
         try:
             intword = int(word)
-            self.emit_opcode("push")
+            self.emit_opcode("push_imm")
             self.emit_short(f"short_imm: {intword}", value=intword)
             return
         except ValueError:
@@ -392,8 +396,8 @@ class Module:
         for fn_name, fn_offset in self.resolved_exports.items():
             header.append(len(fn_name))
             header.extend(fn_name.encode("ascii"))
-            header.append(fn_offset & 0xff)
-            header.append((fn_offset >> 8) & 0xff)
+            header.append(fn_offset & 0xFF)
+            header.append((fn_offset >> 8) & 0xFF)
 
         return header
 
