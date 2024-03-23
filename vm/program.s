@@ -15,18 +15,22 @@ load_system:
     &system load_module &system_module !
 ;
 
+cube: dup dup * * ;
+
+offset: #0
+
 printy:
-    0 5 for! [
-        r@ &i !
-        0 &i @ for! [
-            &i @ print
-        ]
+    &offset !
+    0 10 for! [
+        r@ &offset @ + cube print
     ]
 ;
 
 entry:
     load_system
-    printy
+    0 10 for! [
+        r@ printy
+    ]
 ;
 
 (

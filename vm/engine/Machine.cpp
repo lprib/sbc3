@@ -4,7 +4,7 @@
 #include "Machine.hpp"
 namespace vm {
 
-#define MACHINE_TRACE (0)
+#define MACHINE_TRACE (1)
 
 #if MACHINE_TRACE
 #define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
@@ -103,7 +103,7 @@ bool Machine::instr() {
       return false;
    }
 
-   trace("exe %d", m_pc);
+   // trace("exe %d", m_pc);
    auto instr = pop_progmem();
    switch(instr) {
    case I_NOP:
