@@ -56,6 +56,9 @@
 | `rpush` or `>r`                  | 38  | `n -- `                  | pop from stack, push to return stack     |
 | `rpop` or `r>`                   | 39  | `-- n`                   | pop from return stack, push to stack     |
 | `rcopy` or `r@`                  | 40  | `-- n`                   | copy top item from return stack to stack |
+| `inc`                            | 41  | `n -- n+1`               |                                          |
+| `dec`                            | 42  | `n -- n-1`               |                                          |
+| `rcopy2`                         | 40  | `-- a b`                 | copy top 2 from return stack, same order |
 
 ## calling convention
 TODO figure out how inter-module calls and returns work (push inter-module tag
