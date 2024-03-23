@@ -56,6 +56,9 @@ private:
    // numbers as module not found.
    static constexpr int SYSTEM_MODULE_MASK = 0x4000;
 
+   static constexpr StackWord TRUE_WORD = 0xffff;
+   static constexpr StackWord FALSE_WORD = 0;
+
    Stack<StackWord> m_stack;
    Stack<StackWord> m_return_stack;
    int m_pc;

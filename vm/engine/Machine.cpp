@@ -18,7 +18,20 @@ enum Instruction {
    I_SUB = 2,
    I_MUL = 3,
    I_DIV = 4,
+   I_MOD = 5,
+   I_SHR = 6,
+   I_SHL = 7,
+   I_INVERT = 8,
+   I_GT = 9,
+   I_LT = 10,
+   I_GE = 11,
+   I_LE = 12,
+   I_EQ = 13,
+   I_NEQ = 14,
+   I_JUMP_IMM = 16,
    I_CALL_IMM = 18,
+   I_BTRUE_IMM = 20,
+   I_BFALSE_IMM = 22,
    I_PUSH_IMM = 28,
    I_RETURN = 23,
    I_LOAD_MODULE = 24,
@@ -68,6 +81,14 @@ std::optional<Error> Machine::execute_by_index(int module_index) {
       m_stack.push(l _op r);                                                   \
    } break
 
+#define COMPARISON_OP(_opcode, _op)                                            \
+   case _opcode: {                                                             \
+      auto r = m_stack.pop();                                                  \
+      auto l = m_stack.pop();                                                  \
+      trace(#_opcode " %d %d", l, r);                                          \
+      m_stack.push((l _op r) ? TRUE_WORD : FALSE_WORD);                        \
+   } break
+
 bool Machine::instr() {
    if(m_pc >= current_code().size()) {
       m_errorno = Error::EofWithoutReturn;
@@ -85,12 +106,43 @@ bool Machine::instr() {
       BINARY_OP(I_SUB, -);
       BINARY_OP(I_MUL, *);
       BINARY_OP(I_DIV, /);
+      BINARY_OP(I_MOD, %);
+      BINARY_OP(I_SHR, >>);
+      BINARY_OP(I_SHL, <<);
 
+      COMPARISON_OP(I_GT, >);
+      COMPARISON_OP(I_LT, <);
+      COMPARISON_OP(I_GE, >=);
+      COMPARISON_OP(I_LE, <=);
+      COMPARISON_OP(I_EQ, ==);
+      COMPARISON_OP(I_NEQ, !=);
+
+   case I_JUMP_IMM: {
+      auto dest = pop_progmem_word();
+      trace("I_JUMP_IMM %hu", dest);
+      m_pc = dest;
+   } break;
    case I_CALL_IMM: {
       auto dest = pop_progmem_word();
       m_return_stack.push(m_pc);
       trace("I_CALL_IMM %hu", dest);
       m_pc = dest;
+   } break;
+   case I_BTRUE_IMM: {
+      auto dest = pop_progmem_word();
+      auto test = m_stack.pop();
+      trace("I_BTRUE_IMM %hu (test %hu)", dest, test);
+      if(test) {
+         m_pc = dest;
+      }
+   } break;
+   case I_BFALSE_IMM: {
+      auto dest = pop_progmem_word();
+      auto test = m_stack.pop();
+      trace("I_BFALSE_IMM %hu (test %hu)", dest, test);
+      if(!test) {
+         m_pc = dest;
+      }
    } break;
    case I_PUSH_IMM: {
       auto imm = pop_progmem_word();

@@ -173,7 +173,7 @@ OPCODES = {
     "!=": 14,
     "jump": 15,
     "jump_imm": 16,
-    "call": 17,
+    "call": 17,  # probably don't need this one
     "call_imm": 18,
     "btrue": 19,
     "btrue_imm": 20,
@@ -196,7 +196,7 @@ OPCODES = {
     "dup2": 34,
     "swap2": 35,
     "over2": 36,
-    "drop2": 37, # why?
+    "drop2": 37,  # why?
     "rpush": 38,
     ">r": 38,  # alias
     "rpop": 39,

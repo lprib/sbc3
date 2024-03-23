@@ -15,6 +15,7 @@ load_system:
 
 entry:
     load_system
-    5 print
-    5 mul2 mul2 print
+    4 23760 != if!
+        [ 1 print ]
+        [ 0 print ]
 ;
