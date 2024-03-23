@@ -48,7 +48,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
    EXPECT_EQ(exp2->name, "wow"sv);
    EXPECT_EQ(exp2->bytecode_offset, 1);
 
-   EXPECT_EQ(mod.code_byte(0), 0xEE);
+   EXPECT_EQ(mod.code()[0], 0xEE);
 }
 
 TEST(ParseModuleHeader, SingleByteHeader_Fails) {

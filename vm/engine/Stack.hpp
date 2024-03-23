@@ -26,6 +26,10 @@ public:
       ++m_sp;
    }
 
+   int item_count() {
+      return m_sp;
+   }
+
 private:
    std::vector<T> m_stack;
    int m_sp = 0;

@@ -9,6 +9,7 @@ PRIVATE
     Machine.cpp
     Machine.hpp
     Stack.hpp
+    engine_common.cpp
     engine_common.hpp
 )
 

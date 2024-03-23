@@ -12,7 +12,12 @@ BytecodeModule::BytecodeModule(
    m_bytecode(std::move(bytecode)),
    m_code_start_index(code_start_index),
    m_module_name(module_name),
-   m_exports(std::move(exports)) {}
+   m_exports(std::move(exports)) {
+   m_bytecode_after_header = std::span<unsigned char>(
+      m_bytecode.data() + m_code_start_index,
+      m_bytecode.size() - m_code_start_index
+   );
+}
 
 std::expected<BytecodeModule, Error> BytecodeModule::load(
    std::span<unsigned char> bytecode

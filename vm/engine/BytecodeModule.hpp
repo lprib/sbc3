@@ -6,6 +6,12 @@
 #include <string_view>
 #include <vector>
 
+#define DEBUG_DUMP
+
+#ifdef DEBUG_DUMP
+#include <iostream>
+#endif
+
 #include "engine_common.hpp"
 
 namespace vm {
@@ -42,17 +48,22 @@ public:
       return std::nullopt;
    }
 
-   unsigned char code_byte(int index) const {
-      return m_bytecode[m_code_start_index + index];
-   }
-
-   std::vector<unsigned char>& code() {
-      return m_bytecode;
+   std::span<unsigned char> code() {
+      return m_bytecode_after_header;
    }
 
    int code_start_index() const {
       return m_code_start_index;
    }
+
+#ifdef DEBUG_DUMP
+   void dump_header() const {
+      std::cout << "name: " << m_module_name << "\n";
+      for(auto e : m_exports) {
+         std::cout << "export: " << e.name << " " << e.bytecode_offset << "\n";
+      }
+   }
+#endif
 
 private:
    /// @brief local copy of bytecode
@@ -63,6 +74,8 @@ private:
 
    /// @brief index of code (skipping header)
    int m_code_start_index;
+
+   std::span<unsigned char> m_bytecode_after_header;
 
    /// @brief module name, view into m_bytecode
    std::string_view m_module_name;

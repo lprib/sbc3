@@ -1,9 +1,10 @@
 #include <cstdio>
+#include <iostream>
 
 #include "Machine.hpp"
 namespace vm {
 
-#define MACHINE_TRACE (1)
+#define MACHINE_TRACE (0)
 
 #if MACHINE_TRACE
 #define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
@@ -26,7 +27,14 @@ enum Instruction {
    I_STORE_WORD = 27,
 };
 
-std::optional<Error> Machine::execute(std::string_view module_name) {
+std::optional<Error> Machine::execute_first_module() {
+   if(m_modules.size() == 0) {
+      return Error::ModuleNotFound;
+   }
+   return execute_by_index(0);
+}
+
+std::optional<Error> Machine::execute_by_name(std::string_view module_name) {
    m_errorno = std::nullopt;
 
    auto index = get_or_load_module(module_name);
@@ -34,8 +42,17 @@ std::optional<Error> Machine::execute(std::string_view module_name) {
       return Error::ModuleNotFound;
    }
 
-   m_current_module_idx = index;
-   m_pc = m_modules[m_current_module_idx].code_start_index();
+   return execute_by_index(index);
+}
+
+std::optional<Error> Machine::execute_by_index(int module_index) {
+   m_current_module_idx = module_index;
+   auto entry = current_module().get_export("entry");
+   if(!entry.has_value()) {
+      return Error::EntryNotFound;
+   }
+
+   m_pc = entry.value().bytecode_offset;
 
    while(instr()) {
    }
@@ -52,6 +69,12 @@ std::optional<Error> Machine::execute(std::string_view module_name) {
    } break
 
 bool Machine::instr() {
+   if(m_pc >= current_code().size()) {
+      m_errorno = Error::EofWithoutReturn;
+      return false;
+   }
+
+   trace("exe %d", m_pc);
    auto instr = pop_progmem();
    switch(instr) {
    case I_NOP:
@@ -75,6 +98,11 @@ bool Machine::instr() {
       m_stack.push(imm);
    } break;
    case I_RETURN: {
+      if(m_return_stack.item_count() == 0) {
+         // top level return
+         trace("I_RETURN toplevel");
+         return false;
+      }
       auto caller = m_return_stack.pop();
       trace("I_RETURN %hu", caller);
       // TODO inter-module return
@@ -82,11 +110,13 @@ bool Machine::instr() {
    } break;
    case I_LOAD_MODULE: {
       // TODO unsafe as fuck
-      auto name = std::string_view(
-         reinterpret_cast<char const*>(&current_code().data()[m_pc])
-      );
+      auto name_ptr = m_stack.pop();
+      auto name_cstr =
+         reinterpret_cast<char const*>(&current_code().data()[name_ptr]);
+      auto name = std::string_view(name_cstr);
+      trace("I_LOAD_MODULE `%s`", name_cstr);
       auto index = get_or_load_module(name);
-      trace("I_LOAD_MODULE %s -> %d", name, index);
+      trace("   -> %d", index);
       if(index < 0) {
          m_errorno = Error::ModuleNotFound;
          return false;
@@ -96,22 +126,56 @@ bool Machine::instr() {
    case I_EXTERN_CALL: {
       auto fn_id = m_stack.pop();
       auto module_id = m_stack.pop();
-      // TODO
+      if(module_id & SYSTEM_MODULE_MASK) {
+         // system module
+         auto module_index = module_id & (~SYSTEM_MODULE_MASK);
+         trace("I_EXTERN_CALL SYSTEM %d %d", module_index, fn_id);
+         m_system_modules[module_index]->invoke_index(*this, fn_id);
+      } else {
+         // bytecode module
+         trace("unimpl");
+         return false;
+      }
    } break;
    case I_LOAD_WORD: {
       auto address = m_stack.pop();
-      auto& code = current_code();
+      auto code = current_code();
+      trace("I_LOAD_WORD %hu", address);
       auto val = code[address] | (code[address + 1] << 8);
+      trace("   -> %hu", val);
       m_stack.push(val);
    } break;
    case I_STORE_WORD: {
+      auto address = m_stack.pop();
+      auto value = m_stack.pop();
+      auto code = current_code();
+      trace("I_STORE_WORD %d <- %d", address, value);
+      code[address] = value & 0xff;
+      code[address + 1] = value >> 8;
    } break;
    }
+   return true;
 };
+
+int Machine::module_index_by_name(std::string_view name) {
+   // search system modules first
+   for(int i = 0; i < m_system_modules.size(); ++i) {
+      if(m_system_modules[i]->name() == name) {
+         return SYSTEM_MODULE_MASK | i;
+      }
+   }
+
+   for(int i = 0; i < m_modules.size(); ++i) {
+      if(m_modules[i].name() == name) {
+         return i;
+      }
+   }
+   return -1;
+}
 
 int Machine::get_or_load_module(std::string_view name) {
    auto idx = module_index_by_name(name);
-   if(idx < 0) {
+   if(idx > 0) {
       return idx;
    } else {
       // not found, we need to load it
