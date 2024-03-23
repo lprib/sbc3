@@ -1,6 +1,18 @@
 # Stack based VM
 
-# VM bytecode specification
+## module structure
+| name            | size(bytes)     | description                             |
+| --------------- | --------------- | --------------------------------------- |
+| module_name_len | 1               | length in bytes of name to follow       |
+| module_name     | module_name_len | name data                               |
+| num_fns         | 1               | number of function entries to follow    |
+| **fn_entry[n]** |                 | **single function entry:**              |
+| fn_name_len[n]  | 1               | length in bytes of name to follow       |
+| fn_name[n]      | fn_name_len     | name data                               |
+| entry offset[n] | 2               | little endian offset from start of file |
+| data and code   |                 | data and code                           |
+
+## bytecode
 | opcode                           | val | stack effects            | description                              |
 | -------------------------------- | --- | ------------------------ | ---------------------------------------- |
 | `nop`                            | 0   | --                       | no op                                    |
@@ -45,11 +57,11 @@
 | `rpop` or `r>`                   | 39  | `-- n`                   | pop from return stack, push to stack     |
 | `rcopy` or `r@`                  | 40  | `-- n`                   | copy top item from return stack to stack |
 
-# calling convention
+## calling convention
 TODO figure out how inter-module calls and returns work (push inter-module tag
 to return stack so we know when returning?)
 
-# `as2.py` syntax
+## `as2.py` syntax
 ```
 (comment)
 (
@@ -75,6 +87,63 @@ entry:
 ;
 
 macro! ( <- call macro (syntax is dependent on macro ) )
+```
+
+## `as2.py` macros
+### `if!`
+```
+<n> if!
+    [ (true branch code) ]
+    [ (false branch code) ]
+```
+Eg
+```
+3 4 < if!
+    [ 1 print ]
+    [ 0 print ]
+```
+
+compiles to 
+```
+    (condition)
+    bfalse_imm->else
+
+    (true code)
+
+    jump_imm->end
+else:
+
+    (false code)
+
+end:
+```
+
+### `for!`
+Expect `(startidx exclusive_upper_bound)` on stack. Loop the body until
+idx>=bound. The loop index is stored on top of the return stack (upper bound is
+stored below it on return stack), and can be retrieved with `r@`. This means you
+must clean up the return stack (pop two from it) if doing an early exit.
+
+```
+<startidx> <exclusive_upper_bound> for! [
+    (body)
+]
+```
+
+compiles to:
+```
+    rpush
+    rpush
+loop_start:
+    rcopy2
+    > bfalse_imm->end (check if reached end of bounds, jump to end)
+
+    (loop body code)
+
+    rpop inc rpush (increment idx)
+    jump_imm->loop_start
+end:
+    rpop rpop drop drop (clean up return stack)
 ```
 
 # todo

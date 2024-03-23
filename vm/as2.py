@@ -203,6 +203,9 @@ OPCODES = {
     "r>": 39,  # alias
     "rcopy": 40,
     "r@": 40,  # alias
+    "inc": 41,
+    "dec": 42,
+    "rcopy2": 43,
     # "loadbyte": 14,
     # "*b": 14,
     # "storebyte": 15,
@@ -278,10 +281,15 @@ class Module:
         elif tok == Token.MACRO:
             if data == "if":
                 self.if_macro(lexer)
+            if data == "for":
+                self.for_macro(lexer)
             elif data == "module_name":
                 self.module_name_macro(lexer)
             elif data == "export":
                 self.export_macro(lexer)
+            else:
+                print(f"unknown macro {data}")
+                exit(1)
         elif tok == Token.BLOCK:
             pass
         elif tok == Token.ADDR_OF_WORD:
@@ -357,6 +365,44 @@ class Module:
         self.compile_lexer_contents(elseblock_lexer)
 
         self.register_label_here(end_label)
+
+    def for_macro(self, lexer: Lexer):
+        loopbody_tok, loopbody_lexer = lexer.next_token()
+        assert loopbody_tok == Token.BLOCK
+
+        loop_start = self.generate_label_name("loop_start")
+        end = self.generate_label_name("end")
+
+        self.emit_opcode("rpush")
+        self.emit_opcode("rpush")
+
+        self.register_label_here(loop_start)
+
+        # check idx<bound, jump to end
+        self.emit_opcode("rcopy2")
+        self.emit_opcode(">")
+        self.emit_opcode("bfalse_imm")
+        self.register_patch_of_resolved_label_here(end)
+        self.emit_short(f"branch_target: {end}")
+
+        # paste loop body
+        self.compile_lexer_contents(loopbody_lexer)
+
+        # inc idx
+        self.emit_opcode("rpop")
+        self.emit_opcode("inc")
+        self.emit_opcode("rpush")
+
+        # jump start
+        self.emit_opcode("jump_imm")
+        self.register_patch_of_resolved_label_here(loop_start)
+        self.emit_short(f"branch_target: {loop_start}")
+
+        self.register_label_here(end)
+        self.emit_opcode("rpop")
+        self.emit_opcode("rpop")
+        self.emit_opcode("drop")
+        self.emit_opcode("drop")
 
     def register_patch_of_resolved_label_here(self, label_name):
         self.patchups[len(self.program)] = label_name

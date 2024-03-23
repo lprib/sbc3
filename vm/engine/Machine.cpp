@@ -32,12 +32,20 @@ enum Instruction {
    I_CALL_IMM = 18,
    I_BTRUE_IMM = 20,
    I_BFALSE_IMM = 22,
-   I_PUSH_IMM = 28,
    I_RETURN = 23,
    I_LOAD_MODULE = 24,
    I_EXTERN_CALL = 25,
    I_LOAD_WORD = 26,
    I_STORE_WORD = 27,
+   I_PUSH_IMM = 28,
+   I_DUP = 29,
+   I_SWAP = 30,
+   I_DROP = 31,
+   I_RPUSH = 38,
+   I_RPOP = 39,
+   I_RCOPY = 40,
+   I_INC = 41,
+   I_RCOPY2 = 43,
 };
 
 std::optional<Error> Machine::execute_first_module() {
@@ -144,11 +152,6 @@ bool Machine::instr() {
          m_pc = dest;
       }
    } break;
-   case I_PUSH_IMM: {
-      auto imm = pop_progmem_word();
-      trace("I_PUSH_IMM %hu", imm);
-      m_stack.push(imm);
-   } break;
    case I_RETURN: {
       if(m_return_stack.item_count() == 0) {
          // top level return
@@ -205,8 +208,55 @@ bool Machine::instr() {
       code[address] = value & 0xff;
       code[address + 1] = value >> 8;
    } break;
+   case I_PUSH_IMM: {
+      auto imm = pop_progmem_word();
+      trace("I_PUSH_IMM %hu", imm);
+      m_stack.push(imm);
+   } break;
+   case I_DUP: {
+      trace("I_DUP");
+      m_stack.push(m_stack.peek());
+   } break;
+   case I_SWAP: {
+      trace("I_SWAP");
+      auto a = m_stack.pop();
+      auto b = m_stack.pop();
+      m_stack.push(a);
+      m_stack.push(b);
+   } break;
+   case I_DROP: {
+      trace("I_DROP");
+      m_stack.pop();
+   } break;
+   case I_RPUSH: {
+      trace("I_RPUSH");
+      auto n = m_stack.pop();
+      m_return_stack.push(n);
+   } break;
+   case I_RPOP: {
+      trace("I_RPOP");
+      auto n = m_return_stack.pop();
+      m_stack.push(n);
+   } break;
+   case I_RCOPY: {
+      trace("I_RCOPY");
+      auto n = m_return_stack.peek();
+      m_stack.push(n);
+   } break;
+   case I_INC: {
+      trace("I_INC");
+      m_stack.push(m_stack.pop() + 1);
+   } break;
+   case I_RCOPY2: {
+      trace("I_RCOPY2");
+      auto top = m_return_stack.peek_n(0);
+      auto second = m_return_stack.peek_n(1);
+      m_stack.push(second);
+      m_stack.push(top);
+   } break;
    default: {
       trace("unknown opcode: %d", instr);
+      return false;
    }
    }
    return true;
