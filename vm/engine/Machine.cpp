@@ -62,8 +62,8 @@ std::optional<Error> Machine::execute_by_index(int module_index) {
 
 #define BINARY_OP(_opcode, _op)                                                \
    case _opcode: {                                                             \
-      auto l = m_stack.pop();                                                  \
       auto r = m_stack.pop();                                                  \
+      auto l = m_stack.pop();                                                  \
       trace(#_opcode " %hu %hu", l, r);                                        \
       m_stack.push(l _op r);                                                   \
    } break
@@ -153,6 +153,9 @@ bool Machine::instr() {
       code[address] = value & 0xff;
       code[address + 1] = value >> 8;
    } break;
+   default: {
+      trace("unknown opcode: %d", instr);
+   }
    }
    return true;
 };

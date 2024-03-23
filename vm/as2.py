@@ -196,13 +196,13 @@ OPCODES = {
     "dup2": 34,
     "swap2": 35,
     "over2": 36,
-    "drop2": 37,
-    "rpush": 42,
-    ">r": 42,  # alias
-    "rpop": 43,
-    "r>": 43,  # alias
-    "rcopy": 44,
-    "r@": 44,  # alias
+    "drop2": 37, # why?
+    "rpush": 38,
+    ">r": 38,  # alias
+    "rpop": 39,
+    "r>": 39,  # alias
+    "rcopy": 40,
+    "r@": 40,  # alias
     # "loadbyte": 14,
     # "*b": 14,
     # "storebyte": 15,
