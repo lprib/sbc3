@@ -1,66 +1,60 @@
 module_name! "program"
-export! mul2
 export! entry
+export! frame
 
 system: "system"
 system_module: #0
 
-i: #0
+graphics: "graphics"
+graphics_module: #0
 
-mul2: 2 * ;
 
+load_system: &system load_module &system_module ! ;
 print: &system_module @ 0 extern_call ;
 
-load_system:
-    &system load_module &system_module !
-;
+set_display_buf: &graphics_module @ 0 extern_call ;
+iskeydown: &graphics_module @ 1 extern_call ;
 
-cube: dup dup * * ;
-
-offset: #0
-
-printy:
-    &offset !
-    0 10 for! [
-        r@ &offset @ + cube print
-    ]
+setup_screen:
+    &graphics load_module &graphics_module !
+    &screen set_display_buf
 ;
 
 entry:
     load_system
-    0 10 for! [
-        r@ printy
-    ]
+    setup_screen
 ;
 
-(
-35: push_imm
-36-37: short_imm: 0
-38: push_imm
-39-40: short_imm: 5
-(0 5)
-41: rpush
-42: rpush
-(r: 5 0)
-43: __generated_loop_start_1:
-43: rcopy2
-(5 0)
-44: >
-(5>0)
-45: bfalse_imm
-46-47: branch_target: __generated_end_2
-48: push_imm
-49-50: short_imm: 99
-51: call_imm
-52-53: call_target: print
-54: rpop
-(r: 5) (0)
-55: inc
-(r: 5) (1)
-56: rpush
-(r: 5 1) ()
-57: jump_imm
-58-59: branch_target: __generated_loop_start_1
-60: __generated_end_2:
-60: ;
-)
+drawpix: (x y --) 256 * + &screen + 15 swap !b ;
+
+clear: 0 8192 for! [ 0 &screen r@ 2 * + ! ] ;
+
+i: #0
+offset: #0
+
+frame:
+    clear
+
+    &i @ inc
+    dup 156 > if!
+        [ drop 0 &i !  ]
+        [ &i ! ]
+
+    32 iskeydown (space key) if!
+    [ &i @ 3 + &i !]
+    [ ]
+
+
+    0 10 for! [
+        r@ 5 * &offset !
+
+        0 50 for! [
+            r@ dup &i @ + &offset @ + swap drawpix
+            50 r@ - &i @ + &offset @ + r@ drawpix
+        ]
+    ]
+
+;
+
+screen:
+zeros! #16384

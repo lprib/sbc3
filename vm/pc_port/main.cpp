@@ -7,9 +7,12 @@
 #include <vector>
 
 #include "BytecodeModule.hpp"
+#include "GraphicsModule.hpp"
 #include "IPlatform.hpp"
 #include "ISystemModule.hpp"
 #include "Machine.hpp"
+
+#include "raylib.h"
 
 static std::vector<unsigned char> load_from_filename(char const* filename);
 
@@ -43,7 +46,7 @@ public:
    void invoke_index(vm::Machine& machine, int fn_id) override {
       switch(fn_id) {
       case 0:
-         std::printf("system.print: %hu\n", machine.stack().pop());
+         std::printf("%hu\n", machine.stack().pop());
          break;
       default:
          std::printf("unknown System call: %d\n", fn_id);
@@ -76,12 +79,44 @@ int main(int argc, char** argv) {
 
    m.add_module(mod_v);
 
+#ifdef CONSOLE
    auto res = m.execute_first_module();
    if(res.has_value()) {
       std::printf("%s\n", vm::error_to_str(mod.error()));
    } else {
       std::printf("ok\n");
    }
+
+#else
+   static constexpr int screenWidth = 256 * 4;
+   static constexpr int screenHeight = 64 * 4;
+
+   m.add_system_module(&GraphicsModule::instance());
+
+   auto err = m.execute("program", "entry");
+
+   if(err.has_value()) {
+      std::cout << vm::error_to_str(err.value()) << "\n";
+      exit(1);
+   }
+
+   InitWindow(screenWidth, screenHeight, "vm graphics");
+
+   SetTargetFPS(60);           // Set our game to run at 60 frames-per-second
+   while(!WindowShouldClose()) // Detect window close button or ESC key
+   {
+      m.execute("program", "frame");
+      BeginDrawing();
+      {
+         ClearBackground(BLACK);
+         GraphicsModule::instance().draw(m);
+         DrawFPS(0, 0);
+      }
+      EndDrawing();
+   }
+
+   CloseWindow(); // Close window and OpenGL context
+#endif
 }
 
 static std::vector<unsigned char> load_from_filename(char const* filename) {

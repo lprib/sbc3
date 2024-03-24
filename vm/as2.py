@@ -206,10 +206,10 @@ OPCODES = {
     "inc": 41,
     "dec": 42,
     "rcopy2": 43,
-    # "loadbyte": 14,
-    # "*b": 14,
-    # "storebyte": 15,
-    # "!b": 15,
+    "loadbyte": 44,
+    "@b": 44,
+    "storebyte": 45,
+    "!b": 45,
 }
 
 
@@ -281,12 +281,14 @@ class Module:
         elif tok == Token.MACRO:
             if data == "if":
                 self.if_macro(lexer)
-            if data == "for":
+            elif data == "for":
                 self.for_macro(lexer)
             elif data == "module_name":
                 self.module_name_macro(lexer)
             elif data == "export":
                 self.export_macro(lexer)
+            elif data == "zeros":
+                self.zeros_macro(lexer)
             else:
                 print(f"unknown macro {data}")
                 exit(1)
@@ -324,11 +326,20 @@ class Module:
             self.register_patch_of_resolved_label_here(word)
             self.emit_short(f"call_target: {word}")
             return
+        
+        print(f"undefined word {word}")
+        exit(1)
 
     def module_name_macro(self, lexer: Lexer):
         tok, data = lexer.next_token()
         assert tok == Token.STRING_IMM
         self.module_name = data
+
+    def zeros_macro(self, lexer: Lexer):
+        tok, nzeros = lexer.next_token()
+        assert tok == Token.SHORT_IMM
+        self.trace("ALLOC ZEROS", proglen=nzeros)
+        self.program.extend([0] * nzeros)
 
     def export_macro(self, lexer: Lexer):
         tok, data = lexer.next_token()

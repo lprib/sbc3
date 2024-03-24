@@ -20,7 +20,9 @@ public:
       m_pc(0),
       m_platform(platform) {}
 
-   std::optional<Error> execute_by_name(std::string_view module_name);
+   std::optional<Error> execute(
+      std::string_view module_name, std::string_view fn_name
+   );
    std::optional<Error> execute_first_module();
 
    /// @brief Add system module
@@ -48,6 +50,13 @@ public:
       return m_stack;
    }
 
+   BytecodeModule& module_by_index(int index) {
+      return m_modules[index];
+   }
+
+   static constexpr StackWord TRUE_WORD = 0xffff;
+   static constexpr StackWord FALSE_WORD = 0;
+
 private:
    static constexpr int STACK_SIZE = 0x100;
    static constexpr int RETURN_STACK_SIZE = 0x100;
@@ -55,9 +64,6 @@ private:
    // Don't want to touch the sign bit for 16-bit ints since we use negative
    // numbers as module not found.
    static constexpr int SYSTEM_MODULE_MASK = 0x4000;
-
-   static constexpr StackWord TRUE_WORD = 0xffff;
-   static constexpr StackWord FALSE_WORD = 0;
 
    Stack<StackWord> m_stack;
    Stack<StackWord> m_return_stack;
@@ -96,7 +102,9 @@ private:
       return out;
    }
 
-   std::optional<Error> execute_by_index(int module_index);
+   std::optional<Error> execute_by_index(
+      int module_index, std::string_view fn_name
+   );
 };
 
 } // namespace vm

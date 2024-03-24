@@ -1,0 +1,3 @@
+[submodule "vm/pc_port/raylib"]
+	path = vm/pc_port/raylib
+	url = git@github.com:raysan5/raylib.git

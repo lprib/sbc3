@@ -4,7 +4,7 @@
 #include "Machine.hpp"
 namespace vm {
 
-#define MACHINE_TRACE (1)
+#define MACHINE_TRACE (0)
 
 #if MACHINE_TRACE
 #define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
@@ -46,16 +46,20 @@ enum Instruction {
    I_RCOPY = 40,
    I_INC = 41,
    I_RCOPY2 = 43,
+   I_LOAD_BYTE = 44,
+   I_STORE_BYTE = 45,
 };
 
 std::optional<Error> Machine::execute_first_module() {
    if(m_modules.size() == 0) {
       return Error::ModuleNotFound;
    }
-   return execute_by_index(0);
+   return execute_by_index(0, "entry");
 }
 
-std::optional<Error> Machine::execute_by_name(std::string_view module_name) {
+std::optional<Error> Machine::execute(
+   std::string_view module_name, std::string_view fn_name
+) {
    m_errorno = std::nullopt;
 
    auto index = get_or_load_module(module_name);
@@ -63,12 +67,14 @@ std::optional<Error> Machine::execute_by_name(std::string_view module_name) {
       return Error::ModuleNotFound;
    }
 
-   return execute_by_index(index);
+   return execute_by_index(index, fn_name);
 }
 
-std::optional<Error> Machine::execute_by_index(int module_index) {
+std::optional<Error> Machine::execute_by_index(
+   int module_index, std::string_view fn_name
+) {
    m_current_module_idx = module_index;
-   auto entry = current_module().get_export("entry");
+   auto entry = current_module().get_export(fn_name);
    if(!entry.has_value()) {
       return Error::EntryNotFound;
    }
@@ -254,6 +260,21 @@ bool Machine::instr() {
       m_stack.push(second);
       m_stack.push(top);
    } break;
+   case I_LOAD_BYTE: {
+      auto address = m_stack.pop();
+      auto code = current_code();
+      trace("I_LOAD_BYTE %hu", address);
+      auto val = code[address];
+      trace("   -> %hu", val);
+      m_stack.push(val);
+   } break;
+   case I_STORE_BYTE: {
+      auto address = m_stack.pop();
+      auto value = m_stack.pop() & 0xff;
+      auto code = current_code();
+      trace("I_STORE_BYTE %d <- %d", address, value);
+      code[address] = value;
+   } break;
    default: {
       trace("unknown opcode: %d", instr);
       return false;
@@ -280,7 +301,7 @@ int Machine::module_index_by_name(std::string_view name) {
 
 int Machine::get_or_load_module(std::string_view name) {
    auto idx = module_index_by_name(name);
-   if(idx > 0) {
+   if(idx >= 0) {
       return idx;
    } else {
       // not found, we need to load it

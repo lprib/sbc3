@@ -59,6 +59,8 @@
 | `inc`                            | 41  | `n -- n+1`               |                                          |
 | `dec`                            | 42  | `n -- n-1`               |                                          |
 | `rcopy2`                         | 40  | `-- a b`                 | copy top 2 from return stack, same order |
+| `loadbyte` or `@b`               | 40  | `ptr -- n`               | load 1-byte word from progmem to stack   |
+| `storebyte` or `!b`              | 40  | `n ptr --`               | store 1-byte word from stack to progmem  |
 
 ## calling convention
 TODO figure out how inter-module calls and returns work (push inter-module tag
@@ -154,3 +156,4 @@ end:
 - [ ] inter-module calls and rets
 - [ ] port assembler to cpp
 - [ ] unit test?
+- [x] raylib frontend with graphics (MVP)
