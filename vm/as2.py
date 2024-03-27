@@ -96,13 +96,17 @@ class Lexer:
                     if (p in Lexer.END_OF_WORD_CHARS) or p.isspace():
                         return Token.ADDR_OF_WORD, word
                     word += self.next()
+            elif n == "$":
+                word = ""
+                while True:
+                    p = self.peek()
+                    if (p in Lexer.END_OF_WORD_CHARS) or p.isspace():
+                        return Token.MACRO, word
+                    word += self.next()
             else:
                 word = n
                 while True:
                     p = self.peek()
-                    if p == "!":
-                        self.advance()
-                        return Token.MACRO, word
                     if p == ":":
                         self.advance()
                         return Token.LABEL, word

@@ -98,19 +98,19 @@ entry:
     123 ( <- push_imm 123 )
 ;
 
-macro! ( <- call macro (syntax is dependent on macro ) )
+$macro ( <- call macro (syntax is dependent on macro ) )
 ```
 
 ## `as2.py` macros
-### `if!`
+### `$if`
 ```
-<n> if!
+<n> $if
     [ (true branch code) ]
     [ (false branch code) ]
 ```
 Eg
 ```
-3 4 < if!
+3 4 < $if
     [ 1 print ]
     [ 0 print ]
 ```
@@ -130,14 +130,14 @@ else:
 end:
 ```
 
-### `for!`
+### `$for`
 Expect `(startidx exclusive_upper_bound)` on stack. Loop the body until
 idx>=bound. The loop index is stored on top of the return stack (upper bound is
 stored below it on return stack), and can be retrieved with `r@`. This means you
 must clean up the return stack (pop two from it) if doing an early exit.
 
 ```
-<startidx> <exclusive_upper_bound> for! [
+<startidx> <exclusive_upper_bound> $for [
     (body)
 ]
 ```
@@ -164,3 +164,5 @@ end:
 - [ ] port assembler to cpp
 - [ ] unit test?
 - [x] raylib frontend with graphics (MVP)
+- [ ] Don't directly bake zero allocations in to .bin, add them in the header or
+      something (or alloc from system)
