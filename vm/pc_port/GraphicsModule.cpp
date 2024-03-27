@@ -7,7 +7,11 @@
 enum Fn {
    SET_DISPLAY_BUF = 0,
    IS_KEY_DOWN = 1,
+   BLIT = 2,
 };
+
+static constexpr int SCREEN_WIDTH = 256;
+static constexpr int SCREEN_HEIGHT = 64;
 
 void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
    switch(fn_id) {
@@ -21,6 +25,30 @@ void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
       machine.stack().push(
          IsKeyDown(key) ? vm::Machine::TRUE_WORD : vm::Machine::FALSE_WORD
       );
+   } break;
+   case BLIT: {
+      // (x y spriteptr -- )
+      auto code = machine.current_module().code();
+
+      auto spriteptr = machine.stack().pop();
+      auto y = machine.stack().pop();
+      auto x = machine.stack().pop();
+      auto sprite_width = code[spriteptr];
+      auto sprite_height = code[spriteptr + 1];
+      auto sprite = code.subspan(spriteptr + 2, sprite_width * sprite_height);
+
+      // std::cout << "blit x:" << x << " y:" << y << " ptr:" << spriteptr << " w:"
+      //           << sprite_width << " h:" << sprite_height << "\n";
+
+      for(int y_iter = 0; y_iter < sprite_height; ++y_iter) {
+         auto dest_y = y + y_iter;
+         auto src_row = sprite.subspan(y_iter * sprite_width, sprite_width);
+         auto dest_row = code.subspan(
+            m_display_buff_bytecode_address + dest_y * SCREEN_WIDTH + x,
+            sprite_width
+         );
+         std::copy(src_row.begin(), src_row.end(), dest_row.begin());
+      }
    } break;
    default:
       std::cout << "unknown graphics call " << fn_id << "\n";
@@ -47,10 +75,11 @@ static constexpr std::array<Color, 16> colormap = {
 };
 
 void GraphicsModule::draw(vm::Machine& machine) {
-   auto progmem = machine.module_by_index(0).code();
-   for(int y = 0; y < 64; ++y) {
-      for(int x = 0; x < 256; ++x) {
-         auto pix = progmem[m_display_buff_bytecode_address + (y * 256 + x)];
+   auto progmem = machine.current_module().code();
+   for(int y = 0; y < SCREEN_HEIGHT; ++y) {
+      for(int x = 0; x < SCREEN_WIDTH; ++x) {
+         auto pix =
+            progmem[m_display_buff_bytecode_address + (y * SCREEN_WIDTH + x)];
          DrawRectangle(x * 4, y * 4, 3, 3, colormap[pix]);
       }
    }

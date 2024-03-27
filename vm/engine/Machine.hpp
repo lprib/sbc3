@@ -50,6 +50,10 @@ public:
       return m_stack;
    }
 
+   BytecodeModule& current_module() {
+      return m_modules[m_current_module_idx];
+   }
+
    BytecodeModule& module_by_index(int index) {
       return m_modules[index];
    }
@@ -77,10 +81,6 @@ private:
    std::optional<Error> m_errorno;
 
    bool instr();
-
-   BytecodeModule& current_module() {
-      return m_modules[m_current_module_idx];
-   }
 
    std::span<unsigned char> current_code() {
       return current_module().code();
