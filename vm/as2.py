@@ -12,8 +12,9 @@ class Token(Enum):
     MACRO = 6
     BLOCK = 7
     ADDR_OF_WORD = 8
-    EOF = 9
-    ERROR = 10
+    DATA_BLOCK = 9
+    EOF = 10
+    ERROR = 11
 
 
 class LexerEof(Exception):
@@ -76,6 +77,10 @@ class Lexer:
                 if self.peek() == "b":
                     isbyte = True
                     self.advance()
+                elif self.peek() == "[":
+                    # data block
+                    self.advance()
+                    return self.next_data_block()
                 else:
                     isbyte = False
 
@@ -126,6 +131,38 @@ class Lexer:
                     block += nblk
             else:
                 block += nblk
+
+    HEX = "0123456789abcdef"
+
+    def next_data_block(self) -> tuple[Token, any]:
+        data = bytearray()
+        ms_nibble = None
+
+        while True:
+            n = self.next()
+            if n.isspace():
+                continue
+            elif n == "]":
+                if ms_nibble is not None:
+                    return self.error(
+                        "Require even number of hex characters for data block"
+                    )
+                return Token.DATA_BLOCK, data
+            else:
+                n = n.lower()
+                if n not in Lexer.HEX:
+                    return self.bad_hex_error()
+                nibble = Lexer.HEX.find(n)
+                if ms_nibble is None:
+                    # first nibble
+                    ms_nibble = nibble
+                else:
+                    # second nibble
+                    data.append((ms_nibble) << 4 | nibble)
+                    ms_nibble = None
+
+    def bad_hex_error(self) -> tuple[Token, any]:
+        return self.error(f"data block must contain valid hex characters, found {n}")
 
     def next_string_literal(self) -> tuple[Token, any]:
         string = ""
@@ -299,6 +336,9 @@ class Module:
             self.emit_opcode("push_imm")
             self.register_patch_of_resolved_label_here(data)
             self.emit_short(f"add_of_word: {data}")
+        elif tok == Token.DATA_BLOCK:
+            self.trace(f"DATA_BLOCK: {data.hex()}", len(data))
+            self.program.extend(data)
         elif tok == Token.EOF:
             return
         elif tok == Token.ERROR:
@@ -326,7 +366,7 @@ class Module:
             self.register_patch_of_resolved_label_here(word)
             self.emit_short(f"call_target: {word}")
             return
-        
+
         print(f"undefined word {word}")
         exit(1)
 

@@ -83,6 +83,13 @@ myvar: #0 ( <- #n adds 2-byte value n to progmem here )
 #0x255 ( <- hex literal to progmem)
 #b0x255 ( <- single byte hex)
 
+#[
+    0011 2233
+    aabb ccdd
+    eeff abcd
+]
+(binary block, each pair of hex numbers added verbatim to program here, any whitespace ignored)
+
 mystr: "henlo" ( <- adds null-terminated string here )
 
 entry:
