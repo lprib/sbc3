@@ -251,6 +251,7 @@ OPCODES = {
     "@b": 44,
     "storebyte": 45,
     "!b": 45,
+    "pick": 46,
 }
 
 
@@ -322,6 +323,8 @@ class Module:
         elif tok == Token.MACRO:
             if data == "if":
                 self.if_macro(lexer)
+            elif data == "ifelse":
+                self.ifelse_macro(lexer)
             elif data == "for":
                 self.for_macro(lexer)
             elif data == "module_name":
@@ -391,6 +394,19 @@ class Module:
         self.exports.append(data)
 
     def if_macro(self, lexer: Lexer):
+        ifblock_tok, ifblock_lexer = lexer.next_token()
+        assert ifblock_tok == Token.BLOCK
+        end_label = self.generate_label_name("end")
+        self.emit_opcode("bfalse_imm")
+        self.register_patch_of_resolved_label_here(end_label)
+        self.emit_short(f"branch_target: {end_label}")
+
+        # paste if block
+        self.compile_lexer_contents(ifblock_lexer)
+
+        self.register_label_here(end_label)
+
+    def ifelse_macro(self, lexer: Lexer):
         ifblock_tok, ifblock_lexer = lexer.next_token()
         # todo need to associate span with each token so we can pinpoint errors
         assert ifblock_tok == Token.BLOCK

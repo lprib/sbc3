@@ -61,6 +61,7 @@
 | `rcopy2`                         | 40  | `-- a b`                 | copy top 2 from return stack, same order |
 | `loadbyte` or `@b`               | 40  | `ptr -- n`               | load 1-byte word from progmem to stack   |
 | `storebyte` or `!b`              | 40  | `n ptr --`               | store 1-byte word from stack to progmem  |
+| `pick`                           | 40  | `ns... idx -- ns[-idx]`  | dup the nth element to top of stack      |
 
 ## calling convention
 TODO figure out how inter-module calls and returns work (push inter-module tag
@@ -104,13 +105,21 @@ $macro ( <- call macro (syntax is dependent on macro ) )
 ## `as2.py` macros
 ### `$if`
 ```
-<n> $if
+<n> $if [ (branch code) ]
+```
+
+compiles to a `bfalse` to jump over `(branch code)` if condition on stack is
+false
+
+### `$ifelse`
+```
+<n> $ifelse
     [ (true branch code) ]
     [ (false branch code) ]
 ```
 Eg
 ```
-3 4 < $if
+3 4 < $ifelse
     [ 1 print ]
     [ 0 print ]
 ```
@@ -166,3 +175,4 @@ end:
 - [x] raylib frontend with graphics (MVP)
 - [ ] Don't directly bake zero allocations in to .bin, add them in the header or
       something (or alloc from system)
+- [ ] add value of label baked in to progmem, eg `jump_imm #&label`

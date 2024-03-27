@@ -41,6 +41,8 @@ enum Instruction {
    I_DUP = 29,
    I_SWAP = 30,
    I_DROP = 31,
+   I_OVER = 32,
+   I_ROT = 33,
    I_RPUSH = 38,
    I_RPOP = 39,
    I_RCOPY = 40,
@@ -49,6 +51,7 @@ enum Instruction {
    I_RCOPY2 = 43,
    I_LOAD_BYTE = 44,
    I_STORE_BYTE = 45,
+   I_PICK = 46,
 };
 
 std::optional<Error> Machine::execute_first_module() {
@@ -234,6 +237,24 @@ bool Machine::instr() {
    case I_DROP: {
       trace("I_DROP");
       m_stack.pop();
+   } break;
+   case I_OVER: {
+      trace("I_OVER");
+      m_stack.push(m_stack.peek_n(1));
+   } break;
+   case I_ROT: {
+      trace("I_ROT");
+      auto c = m_stack.pop();
+      auto b = m_stack.pop();
+      auto a = m_stack.pop();
+      m_stack.push(b);
+      m_stack.push(c);
+      m_stack.push(a);
+   } break;
+   case I_PICK: {
+      trace("I_PICK");
+      auto index = m_stack.pop();
+      m_stack.push(m_stack.peek_n(index));
    } break;
    case I_RPUSH: {
       trace("I_RPUSH");
