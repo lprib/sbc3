@@ -45,6 +45,7 @@ enum Instruction {
    I_RPOP = 39,
    I_RCOPY = 40,
    I_INC = 41,
+   I_DEC = 42,
    I_RCOPY2 = 43,
    I_LOAD_BYTE = 44,
    I_STORE_BYTE = 45,
@@ -252,6 +253,10 @@ bool Machine::instr() {
    case I_INC: {
       trace("I_INC");
       m_stack.push(m_stack.pop() + 1);
+   } break;
+   case I_DEC: {
+      trace("I_DEC");
+      m_stack.push(m_stack.pop() - 1);
    } break;
    case I_RCOPY2: {
       trace("I_RCOPY2");
