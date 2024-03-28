@@ -63,13 +63,13 @@ frame:
     &x @ &newx !
     &y @ &newy !
     (w) 87 iskeydown? $if [ &newy --! ]
-    (a) 65 iskeydoeln? $if [ &newx --! ]
+    (a) 65 iskeydown? $if [ &newx --! ]
     (s) 83 iskeydown? $if [ &newy ++! ]
     (d) 68 iskeydown? $if [ &newx ++! ]
     (space) 32 iskeydown? $if [ clear ]
 
-    &newx @ 0 xbound between? $if [ &newx @ &x ! ]
-    &newy @ 0 ybound between? $if [ &newy @ &y ! ]
+    &newx @ 1 xbound between? $if [ &newx @ &x ! ]
+    &newy @ 1 ybound between? $if [ &newy @ &y ! ]
 
     &x @ &y @ &sprite blit
 ;
