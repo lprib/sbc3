@@ -361,7 +361,7 @@ class Module:
             return
 
         try:
-            intword = int(word)
+            intword = int(word, 0)
             self.emit_opcode("push_imm")
             self.emit_short(f"short_imm: {intword}", value=intword)
             return
