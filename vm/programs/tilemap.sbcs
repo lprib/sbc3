@@ -1,0 +1,3 @@
+$module_name "program"
+$export entry
+$export frame

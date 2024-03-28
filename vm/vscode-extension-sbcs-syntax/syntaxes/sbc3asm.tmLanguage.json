@@ -1,0 +1,133 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "SBC3 Assembly",
+	"patterns": [
+		{
+			"include": "#data_block"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#labels"
+		},
+		{
+			"include": "#push_labels"
+		},
+		{
+			"include": "#special_opcodes"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.macros",
+					"match": "\\$(if|ifelse|for|module_name|zeros)\\b"
+				},
+				{
+					"include": "#export_macro"
+				}
+			]
+		},
+		"export_macro": {
+			"match": "(\\$export)\\s+(\\S+)\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.control.macros"
+				},
+				"2": {
+					"name": "variable.parameter"
+				}
+			}
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.inline.decimal",
+					"match": "#b?[0-9]+\\b"
+				},
+				{
+					"name": "constant.numeric.inline.hex",
+					"match": "#b?0x[0-9a-fA-F]+\\b"
+				},
+				{
+					"name": "constant.numeric.pushed.decimal",
+					"match": "\\b[0-9]+\\b"
+				},
+				{
+					"name": "constant.numeric.pushed.hex",
+					"match": "\\b0x[0-9a-fA-F]+\\b"
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.block",
+			"begin": "\\(",
+			"end": "\\)"
+		},
+		"strings": {
+			"name": "string.quoted.double.sbc3asm",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.sbc3asm",
+					"match": "\\\\."
+				}
+			]
+		},
+		"labels": {
+			"patterns": [
+				{
+					"name": "entity.name.function",
+					"match": "\\S+:"
+				}
+			]
+		},
+		"push_labels": {
+			"name": "entity.name.tag",
+			"match": "&\\S+"
+		},
+		"data_block": {
+			"begin": "#\\[",
+			"end": "\\]",
+			"captures": {
+				"0": {
+					"name": "keyword.control"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comments"
+				},
+				{
+					"name": "constant.numeric",
+					"match": "[0-9a-fA-f]"
+				}
+			]
+		},
+		"special_opcodes": {
+			"patterns": [
+				{
+					"match": "(?<=\\s|^)(!b|!|@b|@|>r|r>|r@|;)(\\s|$)",
+					"captures": {
+						"1": {
+							"name": "variable.language"
+						}
+					}
+				}
+			]
+		}
+	},
+	"scopeName": "source.sbcs"
+}

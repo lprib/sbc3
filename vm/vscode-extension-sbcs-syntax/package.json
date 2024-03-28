@@ -1,0 +1,25 @@
+{
+  "name": "sbcs-syntax",
+  "displayName": "sbcs-syntax",
+  "description": "syntax support for sbc as2 bytecode assembly",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.87.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "sbc3asm",
+      "aliases": ["SBC3 Assembly", "sbc3asm"],
+      "extensions": [".scbs"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "sbc3asm",
+      "scopeName": "source.sbcs",
+      "path": "./syntaxes/sbc3asm.tmLanguage.json"
+    }]
+  }
+}

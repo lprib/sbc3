@@ -32,7 +32,6 @@ sprite:
 drawpix: (x y --) 256 * + &screen + 15 swap !b ;
 clear: 0 8192 $for [ 0 &screen r@ 2 * + ! ] ;
 
-
 ++!: dup @ inc swap ! ;
 --!: dup @ dec swap ! ;
 
@@ -53,7 +52,6 @@ fade: 0 16384 $for [ r@ @pixel dec_ifnot0 r@ !pixel ] ;
 
 between?: (value lower_inclusive upper_exclusive -- between?)
     2 pick <= $ifelse [ drop drop 0 ] [ >= ] ;
-
 framenum: #0
 
 frame:
@@ -65,7 +63,7 @@ frame:
     &x @ &newx !
     &y @ &newy !
     (w) 87 iskeydown? $if [ &newy --! ]
-    (a) 65 iskeydown? $if [ &newx --! ]
+    (a) 65 iskeydoeln? $if [ &newx --! ]
     (s) 83 iskeydown? $if [ &newy ++! ]
     (d) 68 iskeydown? $if [ &newx ++! ]
     (space) 32 iskeydown? $if [ clear ]
