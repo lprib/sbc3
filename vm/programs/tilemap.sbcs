@@ -1,3 +1,103 @@
 $module_name "program"
 $export entry
 $export frame
+
+system_name: "system"
+system: #0
+graphics_name: "graphics"
+graphics: #0
+load_system: &system_name load_module &system ! ;
+load_graphics: &graphics_name load_module &graphics ! ;
+print:              &system     @ 0 extern_call ;
+set_display_buf:    &graphics   @ 0 extern_call ;
+iskeydown?:         &graphics   @ 1 extern_call ;
+blit:               &graphics   @ 2 extern_call ;
+
+
+drawpix: (x y --) 256 * + &screen + 15 swap !b ;
+
+
+sprite_size: 66 ;
+
+tile_to_sprite_offset: (tileidx -- addr)
+    (1 - because 0 is blank)
+    1 - sprite_size * &first_sprite +
+;
+
+get_tile: (tilex tiley -- tileidx)
+8 * + &tilemap + @b ;
+
+tilecoord2pos: 8 * swap 8 * swap ;
+
+draw_tile: (tilex tiley --)
+    over over (dup2)
+    get_tile >r tilecoord2pos r> 
+    dup 0 == $ifelse
+        [ drop drop drop ] (0 is blank)
+        [tile_to_sprite_offset blit] (otherwise draw it)
+;
+
+yiter: #0
+draw_tilemap:
+    0 8 $for [
+        r@ &yiter !
+        0 8 $for [ r@ &yiter @ draw_tile ]
+    ]
+;
+
+entry:
+    load_system
+    load_graphics
+    &screen set_display_buf
+;
+
+(playerx: #2
+playery: #2
+
+draw_player:
+    &playerx @ 8 * &playery @ 8 * &sprite_me blit)
+
+frame:
+    ( 10 10 drawpix )
+    draw_tilemap
+;
+
+tilemap:
+#[
+01 01 01 01 01 01 01 01
+01 00 00 00 00 00 00 01
+01 00 00 00 00 00 00 01
+01 00 00 00 00 00 00 01
+01 00 00 00 00 00 00 01
+01 00 00 00 00 00 00 01
+01 00 00 00 00 00 00 01
+01 01 01 01 01 01 01 01
+]
+
+first_sprite:
+sprite_tree:
+#b8 #b8 #[
+00 00 0f 0f 0f 0f 00 00 
+00 0f 03 03 03 03 0f 00 
+00 0f 03 03 03 03 0f 00 
+00 08 0f 0f 0f 08 08 00 
+00 08 00 0f 08 00 08 00 
+00 00 00 0f 08 00 00 00 
+00 00 0f 0f 08 08 00 00 
+00 00 00 00 00 00 00 00 
+]
+
+sprite_me:
+#b8 #b8 #[
+00 00 0f 0f 0f 00 00 00 
+00 0f 00 00 00 0f 00 00 
+00 0f 00 00 00 0f 00 00 
+00 00 0f 0f 0f 00 00 00 
+00 00 00 0f 00 00 00 00 
+00 0f 0f 0f 0f 0f 00 00 
+00 00 00 0f 00 00 00 00 
+00 00 0f 00 0f 00 00 00 
+]
+
+screen:
+$zeros #16384

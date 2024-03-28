@@ -155,7 +155,7 @@ class Lexer:
             else:
                 n = n.lower()
                 if n not in Lexer.HEX:
-                    return self.bad_hex_error()
+                    return self.bad_hex_error(n)
                 nibble = Lexer.HEX.find(n)
                 if ms_nibble is None:
                     # first nibble
@@ -165,7 +165,7 @@ class Lexer:
                     data.append((ms_nibble) << 4 | nibble)
                     ms_nibble = None
 
-    def bad_hex_error(self) -> tuple[Token, any]:
+    def bad_hex_error(self, n) -> tuple[Token, any]:
         return self.error(f"data block must contain valid hex characters, found {n}")
 
     def next_string_literal(self) -> tuple[Token, any]:
