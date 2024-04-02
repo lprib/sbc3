@@ -8,6 +8,7 @@ enum Fn {
    SET_DISPLAY_BUF = 0,
    IS_KEY_DOWN = 1,
    BLIT = 2,
+   IS_KEY_PRESSED = 3,
 };
 
 static constexpr int SCREEN_WIDTH = 256;
@@ -24,6 +25,13 @@ void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
       auto key = machine.stack().pop();
       machine.stack().push(
          IsKeyDown(key) ? vm::Machine::TRUE_WORD : vm::Machine::FALSE_WORD
+      );
+   } break;
+   case IS_KEY_PRESSED: {
+      // ( key -- down? )
+      auto key = machine.stack().pop();
+      machine.stack().push(
+         IsKeyPressed(key) ? vm::Machine::TRUE_WORD : vm::Machine::FALSE_WORD
       );
    } break;
    case BLIT: {
