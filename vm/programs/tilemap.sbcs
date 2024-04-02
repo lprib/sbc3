@@ -12,10 +12,13 @@ print:              &system     @ 0 extern_call ;
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
 blit:               &graphics   @ 2 extern_call ;
-
+iskeypressed?:      &graphics   @ 3 extern_call ;
 
 drawpix: (x y --) 256 * + &screen + 15 swap !b ;
+clear: 0 8192 $for [ 0 &screen r@ 2 * + ! ] ;
 
+++!: dup @ inc swap ! ;
+--!: dup @ dec swap ! ;
 
 sprite_size: 66 ;
 
@@ -51,15 +54,39 @@ entry:
     &screen set_display_buf
 ;
 
-(playerx: #2
+playerx: #2
 playery: #2
+newx: #2
+newy: #2
+
+(copy vara to varb)
+->: (vara varb -- ) swap @ swap ! ;
 
 draw_player:
-    &playerx @ 8 * &playery @ 8 * &sprite_me blit)
+    ( 16 16 &sprite_me blit )
+    &playerx @ 8 * &playery @ 8 * &sprite_me blit
+;
+
+handle_input:
+    &playerx &newx ->
+    &playery &newy ->
+
+    (w) 87 iskeypressed? $if [ &newy --! ]
+    (a) 65 iskeypressed? $if [ &newx --! ]
+    (s) 83 iskeypressed? $if [ &newy ++! ]
+    (d) 68 iskeypressed? $if [ &newx ++! ]
+    &newx @ &newy @ get_tile
+    0 == $if (no collision) [
+        &newx &playerx ->
+        &newy &playery ->
+    ]
+;
 
 frame:
-    ( 10 10 drawpix )
+    clear
+    handle_input
     draw_tilemap
+    draw_player
 ;
 
 tilemap:
@@ -69,7 +96,7 @@ tilemap:
 01 00 00 00 00 00 00 01
 01 00 00 00 00 00 00 01
 01 00 00 00 00 00 00 01
-01 00 00 00 00 00 00 01
+01 00 00 00 00 01 00 01
 01 00 00 00 00 00 00 01
 01 01 01 01 01 01 01 01
 ]
@@ -89,14 +116,14 @@ sprite_tree:
 
 sprite_me:
 #b8 #b8 #[
-00 00 0f 0f 0f 00 00 00 
-00 0f 00 00 00 0f 00 00 
-00 0f 00 00 00 0f 00 00 
-00 00 0f 0f 0f 00 00 00 
-00 00 00 0f 00 00 00 00 
-00 0f 0f 0f 0f 0f 00 00 
-00 00 00 0f 00 00 00 00 
-00 00 0f 00 0f 00 00 00 
+00 00 00 00 00 00 00 00
+00 00 00 03 03 00 00 00
+00 00 03 06 06 03 00 00
+00 02 06 0f 06 0f 03 00
+00 02 06 06 06 06 03 00
+00 02 06 06 06 06 03 00
+00 02 06 02 06 06 03 00
+00 02 02 00 02 02 00 00
 ]
 
 screen:
