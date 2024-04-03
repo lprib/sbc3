@@ -103,12 +103,33 @@ update_player_tween:
     &gfxplayery @ &playery @ tween &gfxplayery !
 ;
 
+lfsr: #0x7123
+(feedback polynomial: x^16 + x^15 + x^13 + x^4 + 1)
+rand:
+    &lfsr @
+    &lfsr @ 1 lsr
+    xor
+    &lfsr @ 3 lsr
+    xor
+    &lfsr @ 12 lsr
+    xor
+    1 and
+
+    &lfsr @ 1 lsr
+    swap 15 <<
+    or
+
+    dup
+    &lfsr !
+;
+
 frame:
     clear_screen
     handle_input
     update_player_tween
     draw_tilemap
     draw_player
+    rand print
 ;
 
 tilemap:
