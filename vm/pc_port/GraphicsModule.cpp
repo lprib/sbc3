@@ -1,6 +1,7 @@
 #include "GraphicsModule.hpp"
 #include "raylib.h"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 
@@ -9,6 +10,7 @@ enum Fn {
    IS_KEY_DOWN = 1,
    BLIT = 2,
    IS_KEY_PRESSED = 3,
+   CLEAR_SCREEN = 4,
 };
 
 static constexpr int SCREEN_WIDTH = 256;
@@ -45,7 +47,8 @@ void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
       auto sprite_height = code[spriteptr + 1];
       auto sprite = code.subspan(spriteptr + 2, sprite_width * sprite_height);
 
-      // std::cout << "blit x:" << x << " y:" << y << " ptr:" << spriteptr << " w:"
+      // std::cout << "blit x:" << x << " y:" << y << " ptr:" << spriteptr << "
+      // w:"
       //           << sprite_width << " h:" << sprite_height << "\n";
 
       for(int y_iter = 0; y_iter < sprite_height; ++y_iter) {
@@ -57,6 +60,14 @@ void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
          );
          std::copy(src_row.begin(), src_row.end(), dest_row.begin());
       }
+   } break;
+   case CLEAR_SCREEN: {
+      // TODO this should probably be in system module and a generic memset
+      auto display = machine.current_module().code().subspan(
+         m_display_buff_bytecode_address,
+         SCREEN_WIDTH * SCREEN_HEIGHT
+      );
+      std::fill(display.begin(), display.end(), 0);
    } break;
    default:
       std::cout << "unknown graphics call " << fn_id << "\n";
