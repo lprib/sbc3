@@ -8,14 +8,16 @@ graphics_name: "graphics"
 graphics: #0
 load_system: &system_name load_module &system ! ;
 load_graphics: &graphics_name load_module &graphics ! ;
+
 print:              &system     @ 0 extern_call ;
+
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
 blit:               &graphics   @ 2 extern_call ;
 iskeypressed?:      &graphics   @ 3 extern_call ;
+clear_screen:       &graphics   @ 4 extern_call ;
 
 drawpix: (x y --) 256 * + &screen + 15 swap !b ;
-clear: 0 8192 $for [ 0 &screen r@ 2 * + ! ] ;
 
 ++!: dup @ inc swap ! ;
 --!: dup @ dec swap ! ;
@@ -36,7 +38,7 @@ draw_tile: (tilex tiley --)
     over over (dup2)
     get_tile >r tilecoord2pos r> 
     dup 0 == $ifelse
-        [ drop drop drop ] (0 is blank)
+        [drop drop drop] (0 is blank)
         [tile_to_sprite_offset blit] (otherwise draw it)
 ;
 
@@ -58,13 +60,18 @@ playerx: #2
 playery: #2
 newx: #2
 newy: #2
+gfxplayerx: #128 (px*8)
+gfxplayery: #128 (px*8)
 
 (copy vara to varb)
 ->: (vara varb -- ) swap @ swap ! ;
 
 draw_player:
-    ( 16 16 &sprite_me blit )
-    &playerx @ 8 * &playery @ 8 * &sprite_me blit
+    ( &playerx @ 8 * &playery @ 8 * &sprite_me blit )
+    &gfxplayerx @ 8 /
+    &gfxplayery @ 8 /
+    &sprite_me
+    blit
 ;
 
 handle_input:
@@ -82,9 +89,24 @@ handle_input:
     ]
 ;
 
+tween: (gfx_pos tile_pos -- new_gfx_pos)
+    64 * (convert to px coord*8)
+    swap
+    dup >r
+    - (error)
+    7 / (tween proportional coeff)
+    r> +
+;
+
+update_player_tween:
+    &gfxplayerx @ &playerx @ tween &gfxplayerx !
+    &gfxplayery @ &playery @ tween &gfxplayery !
+;
+
 frame:
-    clear
+    clear_screen
     handle_input
+    update_player_tween
     draw_tilemap
     draw_player
 ;
@@ -104,26 +126,26 @@ tilemap:
 first_sprite:
 sprite_tree:
 #b8 #b8 #[
-00 00 0f 0f 0f 0f 00 00 
-00 0f 03 03 03 03 0f 00 
-00 0f 03 03 03 03 0f 00 
-00 08 0f 0f 0f 08 08 00 
-00 08 00 0f 08 00 08 00 
-00 00 00 0f 08 00 00 00 
-00 00 0f 0f 08 08 00 00 
+00 00 06 06 06 06 00 00 
+00 06 02 02 02 02 06 00 
+00 06 02 02 02 02 06 00 
+00 04 06 06 06 04 04 00 
+00 04 00 06 04 00 04 00 
+00 00 00 06 04 00 00 00 
+00 00 06 06 04 04 00 00 
 00 00 00 00 00 00 00 00 
 ]
 
 sprite_me:
 #b8 #b8 #[
 00 00 00 00 00 00 00 00
-00 00 00 03 03 00 00 00
-00 00 03 06 06 03 00 00
-00 02 06 0f 06 0f 03 00
-00 02 06 06 06 06 03 00
-00 02 06 06 06 06 03 00
-00 02 06 02 06 06 03 00
-00 02 02 00 02 02 00 00
+00 00 00 06 06 00 00 00
+00 00 06 09 09 06 00 00
+00 04 09 0f 09 0f 06 00
+00 04 09 09 09 09 06 00
+00 04 09 09 09 09 06 00
+00 04 09 04 09 09 06 00
+00 04 04 00 04 04 00 00
 ]
 
 screen:

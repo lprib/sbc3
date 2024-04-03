@@ -176,3 +176,6 @@ end:
 - [ ] Don't directly bake zero allocations in to .bin, add them in the header or
       something (or alloc from system)
 - [ ] add value of label baked in to progmem, eg `jump_imm #&label`
+- [ ] gracefully fail if:
+  - [ ] loading a module that is not found
+  - [ ] extern calling a module that is not loaded (currently blindly index modules list and segfault)
