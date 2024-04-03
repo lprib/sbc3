@@ -253,6 +253,10 @@ OPCODES = {
     "storebyte": 45,
     "!b": 45,
     "pick": 46,
+    "and": 47,
+    "or": 48,
+    "xor": 49,
+    "lsr": 50,
 }
 
 

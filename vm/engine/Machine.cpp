@@ -52,6 +52,10 @@ enum Instruction {
    I_LOAD_BYTE = 44,
    I_STORE_BYTE = 45,
    I_PICK = 46,
+   I_BIT_AND = 47,
+   I_BIT_OR = 48,
+   I_BIT_XOR = 49,
+   I_LOGICAL_SHIFT_RIGHT = 50,
 };
 
 std::optional<Error> Machine::execute_first_module() {
@@ -127,6 +131,16 @@ bool Machine::instr() {
       BINARY_OP(I_MOD, %);
       BINARY_OP(I_SHR, >>);
       BINARY_OP(I_SHL, <<);
+      BINARY_OP(I_BIT_AND, &);
+      BINARY_OP(I_BIT_OR, |);
+      BINARY_OP(I_BIT_XOR, ^);
+
+   case I_LOGICAL_SHIFT_RIGHT: {
+      auto r = m_stack.pop();
+      auto l = m_stack.pop();
+      trace(#I_LOGICAL_SHIFT_RIGHT " %hu %hu", l, r);
+      m_stack.push((StackWord)((unsigned short)l >> r));
+   } break;
 
       COMPARISON_OP(I_GT, >);
       COMPARISON_OP(I_LT, <);
