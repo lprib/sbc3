@@ -46,7 +46,7 @@ public:
    void invoke_index(vm::Machine& machine, int fn_id) override {
       switch(fn_id) {
       case 0:
-         std::printf("%hu\n", machine.stack().pop());
+         std::printf("%d\n", machine.stack().pop());
          break;
       default:
          std::printf("unknown System call: %d\n", fn_id);
@@ -57,6 +57,8 @@ public:
 private:
    System() : vm::ISystemModule("system") {}
 };
+
+// #define CONSOLE
 
 int main(int argc, char** argv) {
    if(argc != 2) {
@@ -80,7 +82,7 @@ int main(int argc, char** argv) {
    m.add_module(mod_v);
 
 #ifdef CONSOLE
-   auto res = m.execute_first_module();
+   auto res = m.execute("program", "entry");
    if(res.has_value()) {
       std::printf("%s\n", vm::error_to_str(mod.error()));
    } else {
@@ -88,8 +90,8 @@ int main(int argc, char** argv) {
    }
 
 #else
-   static constexpr int screenWidth = 256 * 4;
-   static constexpr int screenHeight = 64 * 4;
+   static constexpr int SCREEN_WIDTH_PX = 256 * 4;
+   static constexpr int SCREEN_HEIGHT_PX = 64 * 4;
 
    m.add_system_module(&GraphicsModule::instance());
 
@@ -100,7 +102,7 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   InitWindow(screenWidth, screenHeight, "vm graphics");
+   InitWindow(SCREEN_WIDTH_PX, SCREEN_HEIGHT_PX, "vm graphics");
 
    SetTargetFPS(60);           // Set our game to run at 60 frames-per-second
    while(!WindowShouldClose()) // Detect window close button or ESC key
