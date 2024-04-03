@@ -88,7 +88,7 @@ class Lexer:
                     self.advance(2)
                     return self.next_int_literal("0123456789abcdefABCDEF", 16, isbyte)
                 else:
-                    return self.next_int_literal("0123456789", 10, isbyte)
+                    return self.next_int_literal("-0123456789", 10, isbyte)
             elif n == "&":
                 word = ""
                 while True:
@@ -184,8 +184,9 @@ class Lexer:
             nint = self.next()
         if len(string) != 0:
             byteval = int(string, base)
-            max_exclusive = 256 if isbyte else 65536
-            if (byteval < max_exclusive) and (byteval >= 0):
+            min_inclusive = 0 if isbyte else -32768
+            max_exclusive = 256 if isbyte else 32768
+            if (byteval < max_exclusive) and (byteval >= min_inclusive):
                 token = Token.BYTE_IMM if isbyte else Token.SHORT_IMM
                 return token, byteval
             else:

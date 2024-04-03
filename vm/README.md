@@ -179,3 +179,4 @@ end:
 - [ ] gracefully fail if:
   - [ ] loading a module that is not found
   - [ ] extern calling a module that is not loaded (currently blindly index modules list and segfault)
+- [ ] allow forward calls
