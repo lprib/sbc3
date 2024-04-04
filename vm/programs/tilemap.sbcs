@@ -50,12 +50,6 @@ draw_tilemap:
     ]
 ;
 
-entry:
-    load_system
-    load_graphics
-    &screen set_display_buf
-;
-
 playerx: #2
 playery: #2
 newx: #2
@@ -123,13 +117,103 @@ rand:
     &lfsr !
 ;
 
+rand8: 0 0 8 $for [ 1 << rand 1 and or ] ;
+rand-upto-64: 0 0 6 $for [ 1 << rand 1 and or ] ;
+
+(particle: x y vx vy t)
+(100 particles at 12 words each)
+(x: 8*px, y: 8*px, vx: 64*px, vy: 64*px)
+pcls: $zeros #1200
+
+n-pcls: 100 ;
+pcl-siz: 12 ;
+
+(idx --)
+pcl-x: pcl-siz * &pcls + 0 + ;
+pcl-y: pcl-siz * &pcls + 2 + ;
+pcl-vx: pcl-siz * &pcls + 4 + ;
+pcl-vy: pcl-siz * &pcls + 6 + ;
+pcl-t: pcl-siz * &pcls + 8 + ;
+pcl-lifetime: pcl-siz * &pcls + 10 + ;
+
+vel2pos: 8 / ;
+pos2pix: 8 / ;
+
+update-pcl: (idx --)
+    >r
+    r@ pcl-vy @ 3 + r@ pcl-vy ! (gravity)
+
+    r@ pcl-y @ r@ pcl-vy @ vel2pos + r@ pcl-y !
+    r@ pcl-x @ r@ pcl-vx @ vel2pos + r@ pcl-x !
+
+    r@ pcl-t ++!
+
+    r> drop
+;
+
+_dup2: over over ;
+
+clamp: (x max -- cx)
+    _dup2 > $ifelse
+    [ swap drop ]
+    [ drop dup 0 < $ifelse [ drop 0 ] [  ] ]
+;
+
+draw-pcl: (idx --)
+    dup dup pcl-t @ swap pcl-lifetime @ < (only draw if pcl.t < pcl.lifetime)
+    $ifelse
+        [ dup pcl-x @ pos2pix 255 clamp swap pcl-y @ pos2pix 63 clamp drawpix ]
+        [ drop ]
+;
+
+pcl-new: (x y vx vy lifetime index --)
+    >r
+    r@ pcl-lifetime !
+    r@ pcl-vy !
+    r@ pcl-vx !
+    r@ pcl-y !
+    r@ pcl-x !
+    0 r@ pcl-t !
+    r> drop
+;
+
+pcl-update-all: 0 n-pcls $for [ r@ update-pcl ] ;
+pcl-draw-all: 0 n-pcls $for [ r@ draw-pcl ] ;
+
+_ex: #0;
+_ey: #0;
+explosion: (x y --)
+    &_ey ! &_ex !
+    0 n-pcls $for [
+        (x) &_ex @ 8 * rand-upto-64 +
+        (y) &_ey @ 8 * rand-upto-64 +
+        (vx) rand-upto-64 32 -
+        (vy) rand-upto-64 0 swap -
+        (lifetime) rand-upto-64
+
+        r@ pcl-new
+    ]
+;
+
+entry:
+    load_system
+    load_graphics
+    &screen set_display_buf
+;
+
 frame:
     clear_screen
     handle_input
     update_player_tween
     draw_tilemap
     draw_player
-    rand print
+
+    (w) 87 iskeypressed? $if [
+        128 32 explosion 
+    ]
+
+    pcl-update-all
+    pcl-draw-all
 ;
 
 tilemap:
