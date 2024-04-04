@@ -90,9 +90,6 @@ int main(int argc, char** argv) {
    }
 
 #else
-   static constexpr int SCREEN_WIDTH_PX = 256 * 4;
-   static constexpr int SCREEN_HEIGHT_PX = 64 * 4;
-
    m.add_system_module(&GraphicsModule::instance());
 
    auto err = m.execute("program", "entry");
@@ -102,7 +99,11 @@ int main(int argc, char** argv) {
       exit(1);
    }
 
-   InitWindow(SCREEN_WIDTH_PX, SCREEN_HEIGHT_PX, "vm graphics");
+   InitWindow(
+      GraphicsModule::SCREEN_WIDTH_PX,
+      GraphicsModule::SCREEN_HEIGHT_PX,
+      "vm graphics"
+   );
 
    SetTargetFPS(60);           // Set our game to run at 60 frames-per-second
    while(!WindowShouldClose()) // Detect window close button or ESC key

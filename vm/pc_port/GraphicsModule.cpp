@@ -13,9 +13,6 @@ enum Fn {
    CLEAR_SCREEN = 4,
 };
 
-static constexpr int SCREEN_WIDTH = 256;
-static constexpr int SCREEN_HEIGHT = 64;
-
 void GraphicsModule::invoke_index(vm::Machine& machine, int fn_id) {
    switch(fn_id) {
    case SET_DISPLAY_BUF:
@@ -99,7 +96,13 @@ void GraphicsModule::draw(vm::Machine& machine) {
       for(int x = 0; x < SCREEN_WIDTH; ++x) {
          auto pix =
             progmem[m_display_buff_bytecode_address + (y * SCREEN_WIDTH + x)];
-         DrawRectangle(x * 4, y * 4, 3, 3, colormap[pix]);
+         DrawRectangle(
+            x * PX_PADDED_SIZE,
+            y * PX_PADDED_SIZE,
+            PX_SIZE,
+            PX_SIZE,
+            colormap[pix]
+         );
       }
    }
 }
