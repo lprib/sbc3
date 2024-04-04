@@ -138,7 +138,7 @@ bool Machine::instr() {
    case I_LOGICAL_SHIFT_RIGHT: {
       auto r = m_stack.pop();
       auto l = m_stack.pop();
-      trace(#I_LOGICAL_SHIFT_RIGHT " %hu %hu", l, r);
+      trace("I_LOGICAL_SHIFT_RIGHT %hu %hu", l, r);
       m_stack.push((StackWord)((unsigned short)l >> r));
    } break;
 
