@@ -373,14 +373,10 @@ class Module:
         except ValueError:
             pass
 
-        if word in self.labels:
-            self.emit_opcode("call_imm")
-            self.register_patch_of_resolved_label_here(word)
-            self.emit_short(f"call_target: {word}")
-            return
-
-        print(f"undefined word {word}")
-        exit(1)
+        # otherwise emit a call_imm to a possible forward label
+        self.emit_opcode("call_imm")
+        self.register_patch_of_resolved_label_here(word)
+        self.emit_short(f"call_target: {word}")
 
     def module_name_macro(self, lexer: Lexer):
         tok, data = lexer.next_token()
