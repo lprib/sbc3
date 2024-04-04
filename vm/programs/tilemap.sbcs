@@ -24,30 +24,55 @@ drawpix: (x y color --) >r 256 * + &screen + r> swap !b ;
 
 sprite_size: 66 ;
 
+tilemap_w: 32 ;
+tilemap_h: 8 ;
+
+TILE_EMPTY: 0 ;
+TILE_TREE: 1 ;
+TILE_BOMB: 2 ;
+TILE_first_solid: 3 ;
+TILE_BOX: 3 ;
+
 tile_to_sprite_offset: (tileidx -- addr)
     (1 - because 0 is blank)
     1 - sprite_size * &first_sprite +
 ;
 
-get_tile: (tilex tiley -- tileidx) 8 * + &tilemap + @b ;
+get_tile: (tilex tiley -- tileidx) tilemap_w * + &tilemap + @b ;
 
-get_tile_addr: (tilex tiley -- addr) 8 * + &tilemap + ;
+get_tile_addr: (tilex tiley -- addr) tilemap_w * + &tilemap + ;
+
+generate_map:
+    0 32 $for [
+        TILE_TREE r@ 6 get_tile_addr !b
+        TILE_BOMB r@ 4 get_tile_addr !b
+    ]
+
+    0 32 $for [
+        TILE_BOX r@ 7 get_tile_addr !b
+        TILE_BOX r@ 0 get_tile_addr !b
+    ]
+    0 8 $for [
+        TILE_BOX 0 r@ get_tile_addr !b
+        TILE_BOX 31 r@ get_tile_addr !b
+    ]
+;
 
 tilecoord2pos: 8 * swap 8 * swap ;
 
 draw_tile: (tilex tiley --)
     over over (dup2)
     get_tile >r tilecoord2pos r> 
-    dup 0 == $ifelse
+    dup TILE_EMPTY == $ifelse
         [drop drop drop] (0 is blank)
         [tile_to_sprite_offset blit] (otherwise draw it)
 ;
 
 yiter: #0
 draw_tilemap:
-    0 8 $for [
+    0 tilemap_h $for [
         r@ &yiter !
-        0 8 $for [ r@ &yiter @ draw_tile ]
+        0 tilemap_w $for [ r@ &yiter @ draw_tile ]
     ]
 ;
 
@@ -69,26 +94,29 @@ draw_player:
     blit
 ;
 
+input_counter: #0
+
+movement:
+    (w) 87 iskeydown? $if [ &newy --! ]
+    (a) 65 iskeydown? $if [ &newx --! ]
+    (s) 83 iskeydown? $if [ &newy ++! ]
+    (d) 68 iskeydown? $if [ &newx ++! ]
+;
+
 handle_input:
     &playerx &newx ->
     &playery &newy ->
 
-    (w) 87 iskeypressed? $if [ &newy --! ]
-    (a) 65 iskeypressed? $if [ &newx --! ]
-    (s) 83 iskeypressed? $if [ &newy ++! ]
-    (d) 68 iskeypressed? $if [ &newx ++! ]
+    &input_counter ++!
+    &input_counter @ 3 % 0 == $if [ movement ]
+
     &newx @ &newy @ get_tile
-    (todo non-destroyable blocks)
-    0 == $ifelse (no collision) [
-        &newx &playerx ->
-        &newy &playery ->
+    dup TILE_first_solid < $ifelse
+    (not solid) [
+        &newx &playerx -> &newy &playery ->
+        TILE_EMPTY != $if [ &playerx @ &playery @ do_collision ]
     ]
-    [
-        (collision)
-        &newx &playerx ->
-        &newy &playery ->
-        &newx @ &newy @ do_collision
-    ]
+    (solid) [ drop ]
 ;
 
 do_collision: (tilex tiley)
@@ -97,12 +125,14 @@ do_collision: (tilex tiley)
     8 * swap 8 * swap explosion
 ;
 
+tween_p_coeff: 8 ;
+
 tween: (gfx_pos tile_pos -- new_gfx_pos)
     64 * (convert to px coord*8)
     swap
     dup >r
     - (error)
-    7 / (tween proportional coeff)
+    tween_p_coeff /
     r> +
 ;
 
@@ -138,9 +168,9 @@ rand-upto-16: 0 0 4 $for [ 1 << rand 1 and or ] ;
 (particle: x y vx vy t)
 (100 particles at 12 words each)
 (x: 8*px, y: 8*px, vx: 64*px, vy: 64*px)
-pcls: $zeros #1400
+pcls: $zeros #2800
 
-n-pcls: 100 ;
+n-pcls: 200 ;
 pcl-siz: 14 ;
 
 (idx --)
@@ -155,7 +185,7 @@ pcl-color: pcl-siz * &pcls + 12 + ;
 vel2pos: 8 / ;
 pos2pix: 8 / ;
 
-gravity: 2 ;
+gravity: 3 ;
 
 update-pcl: (idx --)
     >r
@@ -210,7 +240,7 @@ _ex: #0;
 _ey: #0;
 _explosion_pcl_idx: #0
 
-_pcl_per_explosion: 20 ;
+_pcl_per_explosion: 40 ;
 
 explosion: (x y --)
     &_ey ! &_ex !
@@ -220,9 +250,9 @@ explosion: (x y --)
     $for [
         (x) &_ex @ 8 * rand-upto-64 +
         (y) &_ey @ 8 * rand-upto-64 +
-        (vx) rand-upto-64 32 -
-        (vy) rand-upto-64 0 swap -
-        (lifetime) rand-upto-64
+        (vx) rand-upto-64 32 - 3 * 2 /
+        (vy) rand-upto-64 0 swap - 3 * 2 /
+        (lifetime) rand-upto-64 3 *
         (color) rand-upto-16 2 / 8 +
 
         r@ pcl-new
@@ -244,6 +274,7 @@ entry:
     load_system
     load_graphics
     &screen set_display_buf
+    generate_map
 ;
 
 frame:
@@ -259,16 +290,7 @@ frame:
 ;
 
 tilemap:
-#[
-01 01 01 01 01 01 01 01
-01 00 00 00 00 00 00 01
-01 00 00 00 00 00 00 01
-01 00 00 00 00 00 00 01
-01 00 00 00 00 00 00 01
-01 00 00 00 00 01 00 01
-01 00 00 00 00 00 00 01
-01 01 01 01 01 01 01 01
-]
+$zeros #256
 
 first_sprite:
 sprite_tree:
@@ -282,6 +304,31 @@ sprite_tree:
 00 00 06 06 04 04 00 00 
 00 00 00 00 00 00 00 00 
 ]
+
+sprite_bomb:
+#b8 #b8 #[
+00 00 08 08 08 08 00 00
+00 08 00 00 00 00 08 00
+08 00 00 00 00 00 00 08
+08 00 00 00 00 00 00 08
+08 00 00 00 00 00 00 08
+08 00 00 00 00 00 00 08
+00 08 00 00 00 00 08 00
+00 00 08 08 08 08 00 00
+]
+
+sprite_box:
+#b8 #b8 #[
+09 09 09 09 09 09 09 09
+07 03 03 03 03 03 03 09
+07 03 05 05 03 03 03 09
+07 03 05 03 03 03 03 09
+07 03 03 03 03 03 03 09
+07 03 03 03 03 03 03 09
+07 03 03 03 03 03 03 09
+07 07 07 07 07 07 07 07
+]
+
 
 sprite_me:
 #b8 #b8 #[
