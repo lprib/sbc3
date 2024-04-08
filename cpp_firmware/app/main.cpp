@@ -6,6 +6,7 @@
 #include "task.h"
 #include "timers.h"
 
+#include "buttons.hpp"
 #include "error.hpp"
 #include "gpio.hpp"
 #include "ledstrip.hpp"
@@ -53,22 +54,6 @@ static void task(void* arg) {
    }
 }
 
-static void task2(void* arg) {
-   (void)arg;
-   for(;;) {
-      // q.blocking_send(Qt::Thing);
-      // vTaskDelay(pdMS_TO_TICKS(100));
-      // q.blocking_send(Qt::Thing);
-      // vTaskDelay(pdMS_TO_TICKS(100));
-      // q.blocking_send(Qt::Thang);
-      vTaskDelay(pdMS_TO_TICKS(100));
-
-      serial::println("henlo");
-
-      // gpio::dbg_led.write((serial::blocking_rx() & 1) != 0);
-   }
-}
-
 int main(void) {
    HAL_Init();
 
@@ -84,6 +69,7 @@ int main(void) {
    gpio::init();
    ledstrip::init();
    serial::init();
+   buttons::init();
 
    gpio::dbg_led.to_lowspeed_pp_out();
 
@@ -93,15 +79,6 @@ int main(void) {
    xTaskCreate(
       &task,
       "BLINK",
-      configMINIMAL_STACK_SIZE * 8,
-      NULL,
-      tskIDLE_PRIORITY + 1U,
-      NULL
-   );
-
-   xTaskCreate(
-      &task2,
-      "sss",
       configMINIMAL_STACK_SIZE * 8,
       NULL,
       tskIDLE_PRIORITY + 1U,

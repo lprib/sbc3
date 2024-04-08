@@ -1,6 +1,8 @@
 add_executable(app)
 target_sources(app
 PRIVATE
+    buttons.hpp
+    buttons.cpp
     comms.cpp
     comms.hpp
     error.hpp
