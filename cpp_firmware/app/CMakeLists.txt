@@ -12,6 +12,8 @@ PRIVATE
     ledstrip.cpp
     ledstrip.hpp
     main.cpp
+    screen.hpp
+    screen.cpp
     serial.cpp
     serial.hpp
     sync.hpp

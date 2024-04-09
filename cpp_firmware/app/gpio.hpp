@@ -11,13 +11,26 @@ void init();
 
 class pin_t {
 public:
-   constexpr pin_t(GPIO_TypeDef* _port, uint16_t _pin) : port(_port), pin(_pin) {}
+   constexpr pin_t(GPIO_TypeDef* _port, uint16_t _pin) :
+      port(_port),
+      pin(_pin) {}
+
    void to_lowspeed_pp_out() const {
       configure(
          LL_GPIO_MODE_OUTPUT,
          LL_GPIO_OUTPUT_PUSHPULL,
          LL_GPIO_PULL_NO,
          LL_GPIO_SPEED_FREQ_LOW,
+         LL_GPIO_AF_0
+      );
+   }
+
+   void to_highspeed_pp_out() const {
+      configure(
+         LL_GPIO_MODE_OUTPUT,
+         LL_GPIO_OUTPUT_PUSHPULL,
+         LL_GPIO_PULL_NO,
+         LL_GPIO_SPEED_FREQ_VERY_HIGH,
          LL_GPIO_AF_0
       );
    }
@@ -90,5 +103,10 @@ const pin_t gp4{GPIOD, LL_GPIO_PIN_12};
 const pin_t gp5{GPIOD, LL_GPIO_PIN_13};
 const pin_t gp6{GPIOD, LL_GPIO_PIN_14};
 const pin_t gp7{GPIOD, LL_GPIO_PIN_15};
+
+const pin_t scr_e{GPIOB, LL_GPIO_PIN_4};
+const pin_t scr_rw{GPIOB, LL_GPIO_PIN_5};
+const pin_t scr_dc{GPIOB, LL_GPIO_PIN_8};
+const pin_t scr_cs{GPIOC, LL_GPIO_PIN_11};
 
 } // namespace gpio

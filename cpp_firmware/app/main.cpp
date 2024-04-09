@@ -13,6 +13,7 @@
 #include "system_clock_config.hpp"
 // #include "uart.hpp"
 #include "comms.hpp"
+#include "screen.hpp"
 #include "serial.hpp"
 #include "sync.hpp"
 #include "util.hpp"
@@ -70,6 +71,10 @@ int main(void) {
    ledstrip::init();
    serial::init();
    buttons::init();
+   screen::init();
+
+   screen::get_dislay_buffer()[10 * screen::DISPLAY_WIDTH + 10] = 0xf;
+   screen::update();
 
    gpio::dbg_led.to_lowspeed_pp_out();
 
@@ -107,6 +112,12 @@ extern "C" {
 extern "C" void __cxa_pure_virtual() {
    error::error();
 }
+
+// some nosys bullshit
+void _close_r(void) {}
+void _lseek_r(void) {}
+void _read_r(void) {}
+void _write_r(void) {}
 #pragma GCC diagnostic pop
 
 /// @brief Need to call the STM32 HAL tick function otherwise timeouts will
