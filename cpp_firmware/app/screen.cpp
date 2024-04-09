@@ -58,13 +58,15 @@ static std::array<uint32_t, 8> data_pins = {
    LL_GPIO_PIN_7,
 };
 
-static constexpr unsigned char COL_START = 28;
-static constexpr unsigned char COL_END = 92;
+// static constexpr unsigned char COL_START = 28;
+// static constexpr unsigned char COL_END = 92;
+static constexpr unsigned char COL_START = 0;
+static constexpr unsigned char COL_END = 64;
 static constexpr unsigned char ROW_START = 0;
 static constexpr unsigned char ROW_END = 64;
 
 static inline void write_data_bus(unsigned char data) {
-   volatile auto gpioc_low8 = reinterpret_cast<volatile uint8_t*>(&GPIOC->ODR);
+   volatile auto gpioc_low8 = reinterpret_cast<volatile uint8_t*>(&GPIOD->ODR);
    *gpioc_low8 = data;
 }
 
@@ -78,6 +80,7 @@ static inline void write_command_txn(unsigned char data) {
    gpio::scr_rw.write(true);
    util::spinloop_us(1);
    gpio::scr_cs.write(true);
+   util::spinloop_us(1);
 }
 
 static inline void command(
@@ -102,15 +105,32 @@ static void set_row_addr(unsigned char start, unsigned char end) {
    );
 }
 
+static void reset() {
+   gpio::scr_res.write(true);
+   util::spinloop_us(100000);
+   gpio::scr_res.write(false);
+   util::spinloop_us(100000);
+   gpio::scr_res.write(true);
+
+   gpio::scr_cs.write(true);
+   gpio::scr_rw.write(true);
+   gpio::scr_e.write(true);
+
+   gpio::scr_cs.write(true);
+}
+
 void init() {
    gpio::scr_e.to_highspeed_pp_out();
    gpio::scr_rw.to_highspeed_pp_out();
    gpio::scr_dc.to_highspeed_pp_out();
    gpio::scr_cs.to_highspeed_pp_out();
+   gpio::scr_res.to_highspeed_pp_out();
 
    for(unsigned short n : data_pins) {
       gpio::pin_t{GPIOD, n}.to_highspeed_pp_out();
    }
+
+   reset();
 
    command(Command::SetCommandLock, {0x12});
    command(Command::SetDisplayOn);
@@ -150,6 +170,7 @@ void init() {
    command(Command::SetPrechargeVoltage, {13});
    command(Command::SetVcomh, {0});
    command(Command::SetModeNormal);
+   // command(Command::SetModeAllOn);
    command(Command::SetDisplayOn);
 }
 
@@ -158,8 +179,8 @@ std::span<unsigned char, DISPLAY_SIZE> get_dislay_buffer() {
 }
 
 void update() {
-   set_col_addr(COL_START, COL_END);
-   set_row_addr(ROW_START, ROW_END);
+   set_col_addr(COL_START, COL_END - 1);
+   set_row_addr(ROW_START, ROW_END - 1);
    command(Command::WriteRam);
 
    gpio::scr_dc.write(true);
@@ -172,12 +193,22 @@ void update() {
                        display_buffer_at(x_quad * 4 + 1, y);
          auto byte_2 = (display_buffer_at(x_quad * 4 + 2, y) << 4) |
                        display_buffer_at(x_quad * 4 + 3, y);
+
+         util::spinloop_us(1);
          gpio::scr_rw.write(false);
-         write_data_bus(byte_1);
+         util::spinloop_us(1);
+         // write_data_bus(byte_1);
+         write_data_bus(0xff);
+         util::spinloop_us(1);
          gpio::scr_rw.write(true);
+
+         util::spinloop_us(1);
          gpio::scr_rw.write(false);
-         write_data_bus(byte_2);
+         util::spinloop_us(1);
+         write_data_bus(0xff);
+         util::spinloop_us(1);
          gpio::scr_rw.write(true);
+         util::spinloop_us(1);
       }
    }
 

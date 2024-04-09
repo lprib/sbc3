@@ -108,5 +108,6 @@ const pin_t scr_e{GPIOB, LL_GPIO_PIN_4};
 const pin_t scr_rw{GPIOB, LL_GPIO_PIN_5};
 const pin_t scr_dc{GPIOB, LL_GPIO_PIN_8};
 const pin_t scr_cs{GPIOC, LL_GPIO_PIN_11};
+const pin_t scr_res{GPIOC, LL_GPIO_PIN_12};
 
 } // namespace gpio
