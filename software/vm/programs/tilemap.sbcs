@@ -77,7 +77,7 @@ draw_tilemap:
 ;
 
 playerx: #2
-playery: #2
+playery: #4
 newx: #2
 newy: #2
 gfxplayerx: #128 (px*8)
@@ -122,7 +122,8 @@ handle_input:
 do_collision: (tilex tiley)
     _dup2
     get_tile_addr 0 swap !b (erase tile)
-    8 * swap 8 * swap explosion
+    8 * swap 8 * swap
+    explosion
 ;
 
 tween_p_coeff: 8 ;
@@ -168,9 +169,9 @@ rand-upto-16: 0 0 4 $for [ 1 << rand 1 and or ] ;
 (particle: x y vx vy t)
 (100 particles at 12 words each)
 (x: 8*px, y: 8*px, vx: 64*px, vy: 64*px)
-pcls: $zeros #2800
+pcls: $zeros #280
 
-n-pcls: 200 ;
+n-pcls: 20 ;
 pcl-siz: 14 ;
 
 (idx --)
@@ -240,7 +241,7 @@ _ex: #0;
 _ey: #0;
 _explosion_pcl_idx: #0
 
-_pcl_per_explosion: 40 ;
+_pcl_per_explosion: 5 ;
 
 explosion: (x y --)
     &_ey ! &_ex !

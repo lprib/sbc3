@@ -22,6 +22,8 @@ PRIVATE
     uart.hpp
     util.cpp
     util.hpp
+    vm_host.cpp
+    vm_host.hpp
 
     startup_stm32f405xx.s
     system_stm32f4xx.c
@@ -35,6 +37,7 @@ target_link_libraries(app
 PRIVATE
     stm32f4xx_hal
     freertos_kernel
+    engine
 )
 target_compile_options(app
 PRIVATE

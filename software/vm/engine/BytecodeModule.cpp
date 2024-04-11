@@ -1,6 +1,5 @@
 #include "BytecodeModule.hpp"
 
-#include <iostream>
 #include <optional>
 
 namespace vm {
@@ -20,7 +19,7 @@ BytecodeModule::BytecodeModule(
 }
 
 std::expected<BytecodeModule, Error> BytecodeModule::load(
-   std::span<unsigned char> bytecode
+   std::span<unsigned char const> bytecode
 ) {
    std::size_t cursor = 0;
 

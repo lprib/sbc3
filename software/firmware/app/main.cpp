@@ -19,22 +19,9 @@
 #include "serial.hpp"
 #include "sync.hpp"
 #include "util.hpp"
+#include "vm_host.hpp"
 
-enum class Qt { Thing, Thang };
-
-static sync::queue<Qt> q(100);
-std::array<unsigned char, screen::DISPLAY_SIZE> display_buf;
-
-static void task(void* arg) {
-   (void)arg;
-   while(true) {
-         std::fill(display_buf.begin(), display_buf.end(), 0);
-      for(int i = 0; i < screen::DISPLAY_SIZE; ++i) {
-         display_buf[i] = 0xf;
-         screen::update(display_buf);
-      }
-   }
-}
+#include "vm_program.inc"
 
 int main(void) {
    HAL_Init();
@@ -53,24 +40,9 @@ int main(void) {
    serial::init();
    buttons::init();
    screen::init();
-
-   // display_buf[10 * screen::DISPLAY_WIDTH + 10] = 0xf;
-   // display_buf[11 * screen::DISPLAY_WIDTH + 11] = 0x8;
-   // display_buf[12 * screen::DISPLAY_WIDTH + 12] = 0x4;
+   vmhost::init(std::span(__vm_out_bin, __vm_out_bin_len));
 
    gpio::dbg_led.to_lowspeed_pp_out();
-
-   // HAL_Init() contains a call to:
-   // HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-
-   xTaskCreate(
-      &task,
-      "BLINK",
-      configMINIMAL_STACK_SIZE * 8,
-      NULL,
-      tskIDLE_PRIORITY + 1U,
-      NULL
-   );
 
    vTaskStartScheduler();
 
@@ -97,9 +69,15 @@ extern "C" void __cxa_pure_virtual() {
 
 // some nosys bullshit
 void _close_r(void) {}
+void _fstat_r(void) {}
+void _getpid_r(void) {}
+void _isatty_r(void) {}
+void _kill_r(void) {}
 void _lseek_r(void) {}
+void _open_r(void) {}
 void _read_r(void) {}
 void _write_r(void) {}
+
 #pragma GCC diagnostic pop
 
 /// @brief Need to call the STM32 HAL tick function otherwise timeouts will
@@ -130,5 +108,10 @@ void vApplicationGetIdleTaskMemory(
    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char* pcTaskName) {
+   serial::println(pcTaskName);
+   error::error();
 }
 }

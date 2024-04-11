@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <iostream>
 
 #include "Machine.hpp"
 namespace vm {
@@ -7,6 +5,7 @@ namespace vm {
 #define MACHINE_TRACE (0)
 
 #if MACHINE_TRACE
+#include <cstdio>
 #define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
 #else
 #define trace(...)

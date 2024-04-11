@@ -24,7 +24,7 @@ public:
    };
 
    static std::expected<BytecodeModule, Error> load(
-      std::span<unsigned char> bytecode
+      std::span<unsigned char const> bytecode
    );
 
    std::string_view name() const {

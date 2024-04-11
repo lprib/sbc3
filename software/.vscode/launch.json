@@ -1,0 +1,36 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug (build) (OpenOCD)",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "runToEntryPoint": "main",
+            "executable": "${workspaceFolder}/build/firmware/app/app",
+            "device": "STM32F405VGT6",
+            "configFiles": [
+                "${workspaceFolder}/firmware/openocd.cfg",
+            ],
+            "showDevDebugOutput": "none",
+        },
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug (dbg) (OpenOCD)",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "runToEntryPoint": "main",
+            "executable": "${workspaceFolder}/dbg/app/app",
+            "device": "STM32F405VGT6",
+            "configFiles": [
+                "${workspaceFolder}/firmware/openocd.cfg",
+            ],
+            "showDevDebugOutput": "none",
+        }
+    ]
+}
