@@ -41,6 +41,12 @@ enum class Command : uint8_t {
    SetCommandLock = 0xfd,
 };
 
+/// @brief value corresponds to state of DC line
+enum class TransactionType : uint8_t {
+   Command = 0,
+   Data = 1,
+};
+
 static std::array<unsigned char, DISPLAY_SIZE> display_buffer;
 
 static inline unsigned char display_buffer_at(int x, int y) {
@@ -58,10 +64,10 @@ static std::array<uint32_t, 8> data_pins = {
    LL_GPIO_PIN_7,
 };
 
-// static constexpr unsigned char COL_START = 28;
-// static constexpr unsigned char COL_END = 92;
-static constexpr unsigned char COL_START = 0;
-static constexpr unsigned char COL_END = 64;
+static constexpr unsigned char COL_START = 28;
+static constexpr unsigned char COL_END = 92;
+// static constexpr unsigned char COL_START = 0;
+// static constexpr unsigned char COL_END = 64;
 static constexpr unsigned char ROW_START = 0;
 static constexpr unsigned char ROW_END = 64;
 
@@ -70,9 +76,9 @@ static inline void write_data_bus(unsigned char data) {
    *gpioc_low8 = data;
 }
 
-static inline void write_command_txn(unsigned char data) {
+static inline void write_byte(TransactionType type, char data) {
    write_data_bus(data);
-   gpio::scr_dc.write(false);
+   gpio::scr_dc.write(static_cast<bool>(type));
    gpio::scr_cs.write(false);
    util::spinloop_us(1);
    gpio::scr_rw.write(false);
@@ -86,9 +92,9 @@ static inline void write_command_txn(unsigned char data) {
 static inline void command(
    Command cmd, std::initializer_list<unsigned char> args = {}
 ) {
-   write_command_txn(static_cast<unsigned char>(cmd));
+   write_byte(TransactionType::Command, static_cast<unsigned char>(cmd));
    for(auto arg : args) {
-      write_command_txn(arg);
+      write_byte(TransactionType::Data, arg);
    }
 }
 
@@ -183,7 +189,7 @@ void update() {
    set_row_addr(ROW_START, ROW_END - 1);
    command(Command::WriteRam);
 
-   gpio::scr_dc.write(true);
+   gpio::scr_dc.write(static_cast<bool>(TransactionType::Data));
    gpio::scr_cs.write(false);
    util::spinloop_us(1);
 
@@ -194,21 +200,17 @@ void update() {
          auto byte_2 = (display_buffer_at(x_quad * 4 + 2, y) << 4) |
                        display_buffer_at(x_quad * 4 + 3, y);
 
-         util::spinloop_us(1);
          gpio::scr_rw.write(false);
-         util::spinloop_us(1);
-         // write_data_bus(byte_1);
-         write_data_bus(0xff);
-         util::spinloop_us(1);
+         write_data_bus(0xf0);
+         util::spinloop_cycles(12); // 10 cycles @ 168Mhz = 59ns t_PWHW(60ns)
          gpio::scr_rw.write(true);
+         util::spinloop_cycles(42); // 42 cycles @ 168Mhz = 247ns t_PWHW(60ns), t_cycle(300ns accounting for the previous 60ns)
 
-         util::spinloop_us(1);
          gpio::scr_rw.write(false);
-         util::spinloop_us(1);
-         write_data_bus(0xff);
-         util::spinloop_us(1);
+         write_data_bus(0x80);
+         util::spinloop_cycles(12); // 10 cycles @ 168Mhz = 59ns t_PWHW(60ns)
          gpio::scr_rw.write(true);
-         util::spinloop_us(1);
+         util::spinloop_cycles(42); // 42 cycles @ 168Mhz = 247ns t_PWHW(60ns), t_cycle(300ns accounting for the previous 60ns)
       }
    }
 
