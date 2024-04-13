@@ -167,6 +167,24 @@ end:
     rpop rpop drop drop (clean up return stack)
 ```
 
+### `$export`
+```
+$export myfn
+```
+Add label myfn to the export list (myfn must exist).
+
+### `$module_name`
+```
+$module_name "mymodule"
+```
+Set module name in header.
+
+### `$zeros`
+```
+$zeros #100
+```
+Add the number of zeros to program memory here.
+
 # todo
 - [ ] opcodes finish
 - [ ] inter-module calls and rets
@@ -179,4 +197,13 @@ end:
 - [ ] gracefully fail if:
   - [ ] loading a module that is not found
   - [ ] extern calling a module that is not loaded (currently blindly index modules list and segfault)
-- [ ] allow forward calls
+- [x] allow forward calls
+
+## optimizations:
+- If a function is only called once -> always inline
+- If a function is less than N words -> always inline
+
+## separate code and data
+- Saves writing &variable, could make `variable` push the address, while `function` emits a call_imm
+- Don't need to put large `$zeros` sections in to the data. Can be in header and expanded on load
+- Ease of writing a full compiler

@@ -14,3 +14,9 @@ PRIVATE
 )
 
 target_include_directories(engine PUBLIC .)
+
+target_compile_options(engine
+PRIVATE
+    $<$<CONFIG:Release>:-O3>
+    $<$<CONFIG:RelWithDebInfo>:-O3>
+)
