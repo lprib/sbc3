@@ -77,6 +77,8 @@ void _lseek_r(void) {}
 void _open_r(void) {}
 void _read_r(void) {}
 void _write_r(void) {}
+void _getentropy_r(void) {}
+void __ssputws_r(void) {}
 
 #pragma GCC diagnostic pop
 

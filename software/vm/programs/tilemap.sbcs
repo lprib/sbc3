@@ -10,6 +10,8 @@ load_system: &system_name load_module &system ! ;
 load_graphics: &graphics_name load_module &graphics ! ;
 
 print:              &system     @ 0 extern_call ;
+profile_start:      &system     @ 1 extern_call ;
+profile_end:        &system     @ 2 extern_call ;
 
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
@@ -169,9 +171,9 @@ rand-upto-16: 0 0 4 $for [ 1 << rand 1 and or ] ;
 (particle: x y vx vy t)
 (100 particles at 12 words each)
 (x: 8*px, y: 8*px, vx: 64*px, vy: 64*px)
-pcls: $zeros #280
+pcls: $zeros #2800
 
-n-pcls: 20 ;
+n-pcls: 200 ;
 pcl-siz: 14 ;
 
 (idx --)
@@ -234,14 +236,19 @@ pcl-new: (x y vx vy lifetime color index --)
     r> drop
 ;
 
-pcl-update-all: 0 n-pcls $for [ r@ update-pcl ] ;
+pcl-update-all: 0 n-pcls $for [
+    r@ pcl-t @
+    r@ pcl-lifetime @
+    < $if
+    [ r@ update-pcl ]
+] ;
 pcl-draw-all: 0 n-pcls $for [ r@ draw-pcl ] ;
 
 _ex: #0;
 _ey: #0;
 _explosion_pcl_idx: #0
 
-_pcl_per_explosion: 5 ;
+_pcl_per_explosion: 20 ;
 
 explosion: (x y --)
     &_ey ! &_ex !
@@ -253,7 +260,7 @@ explosion: (x y --)
         (y) &_ey @ 8 * rand-upto-64 +
         (vx) rand-upto-64 32 - 3 * 2 /
         (vy) rand-upto-64 0 swap - 3 * 2 /
-        (lifetime) rand-upto-64 3 *
+        (lifetime) rand-upto-64 (3 *)
         (color) rand-upto-16 2 / 8 +
 
         r@ pcl-new
@@ -281,13 +288,29 @@ entry:
 frame:
     clear_screen
 
+    1 profile_start
     handle_input
-    update_player_tween
-    pcl-update-all
+    1 profile_end
 
+    2 profile_start
+    update_player_tween
+    2 profile_end
+
+    3 profile_start
+    pcl-update-all
+    3 profile_end
+
+    4 profile_start
     draw_tilemap
+    4 profile_end
+
+    5 profile_start
     draw_player
+    5 profile_end
+
+    6 profile_start
     pcl-draw-all
+    6 profile_end
 ;
 
 tilemap:

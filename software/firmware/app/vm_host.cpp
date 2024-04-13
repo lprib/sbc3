@@ -39,6 +39,23 @@ private:
    Platform(){};
 };
 
+class ProfileTimer {
+public:
+   void start() {
+      m_start_time = xTaskGetTickCount();
+   }
+   void end() {
+      m_end_time = xTaskGetTickCount();
+   }
+   long elapsed() {
+      return m_end_time - m_start_time;
+   }
+
+private:
+   long m_start_time = 0;
+   long m_end_time = 0;
+};
+
 class System final : public vm::ISystemModule {
 public:
    System(const System&) = delete;
@@ -48,13 +65,31 @@ public:
       return inst;
    }
 
+   enum Fn {
+      PRINT_DECIMAL = 0,
+      PROFILE_START = 1,
+      PROFILE_END = 2,
+   };
+
    void invoke_index(vm::Machine& machine, int fn_id) override {
       switch(fn_id) {
-      case 0: {
+      case PRINT_DECIMAL: {
          // std::printf("%d\n", machine.stack().pop());
          char out[20];
          std::snprintf(out, 20, "%d", machine.stack().pop());
          serial::println(out);
+      } break;
+      case PROFILE_START: {
+         auto idx = machine.stack().pop();
+         if(idx < N_PROFILE_TIMER) {
+            m_profile_timers[idx].start();
+         }
+      } break;
+      case PROFILE_END: {
+         auto idx = machine.stack().pop();
+         if(idx < N_PROFILE_TIMER) {
+            m_profile_timers[idx].end();
+         }
       } break;
       default:
          error::error();
@@ -62,8 +97,14 @@ public:
       }
    }
 
+   std::span<ProfileTimer> profile_timers() {
+      return m_profile_timers;
+   }
+
 private:
    System() : vm::ISystemModule("system") {}
+   static constexpr int N_PROFILE_TIMER = 8;
+   std::array<ProfileTimer, N_PROFILE_TIMER> m_profile_timers;
 };
 
 class GraphicsModule final : public vm::ISystemModule {
@@ -218,6 +259,15 @@ void task(void* arg) {
       char out[40];
       std::snprintf(out, 40, "vm: %ld draw:%ld", elapsed_vm, elapsed_draw);
       serial::println(out);
+
+      // report profile timers
+      int i = 0;
+      for(auto n : System::instance().profile_timers()) {
+         char out[10];
+         std::snprintf(out, 10, "%d: %ld", i, n.elapsed());
+         serial::println(out);
+         ++i;
+      }
    }
 }
 
