@@ -39,6 +39,8 @@ time you're connecting the SWD
 - [ ] smaller form factor with parts hidden underscreen and less rs485 or more
 compact layout (look for resistor/cap sizing for 0402 wattage)
 - [ ] ACTUALLY WIRE UP THE BUTTONS AND ENCODER THIS TIME!
+    - Of all the things to screw up on the first PCB run, I didn't expect to
+    completely forget to connect the button and rotary nets
 - [ ] Tiny JST connectors really are shit! Hot pluggable trs circuit?
 Enable/disabable power chip? Need to get this right before making a bunch of peripheral boards.
 
@@ -50,3 +52,17 @@ Enable/disabable power chip? Need to get this right before making a bunch of per
 
 Not yet manufactured, since still thinking about re-doing the comms (definitely
 not going to use the current JST connectors as theyre much too finicky).
+
+### virtual machine
+Also included is a stack based virtual bytecode machine (see [software/vm](./software/vm)).
+The bytecode can call out to pre-defined system modules, including graphics
+routines. Below is an example of the main board STM32 and a Linux desktop
+running the same bytecode program.
+
+#### STM32
+![target](img/vm-on-target.gif)
+#### Linux desktop
+![pc](img/vm-on-pc.gif)
+
+As the bytecode is stack based, a thin forth layer has been built for it, which
+is currently assembled by a python script. See the source program for the above gifs [here](./software/vm/programs/tilemap.sbcs).
