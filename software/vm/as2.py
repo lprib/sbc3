@@ -274,11 +274,6 @@ class Module:
         lexer = Lexer(text)
         self.compile_lexer_contents(Lexer(text))
 
-        print(self.tracetext)
-
-        print("labels", self.labels)
-        print("patchups", self.patchups)
-
         for patchup_location, labelname in self.patchups.items():
             if labelname in self.labels:
                 location = self.labels[labelname]
@@ -304,7 +299,6 @@ class Module:
     def compile_lexer_contents(self, lexer: Lexer):
         tok, data = lexer.next_token()
         while tok != Token.EOF:
-            print(tok, data)
             self.compile_token(lexer, tok, data)
             tok, data = lexer.next_token()
 
@@ -524,12 +518,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input")
     parser.add_argument("output")
+    parser.add_argument(
+        "--dbg-emit-trace", dest="dbg_emit_trace", action="store_true", help="print module assembly trace"
+    )
+    parser.add_argument(
+        "--dbg-labels", dest="dbg_labels", action="store_true", help="print module label locations"
+    )
+    parser.add_argument(
+        "--dbg-patchups", dest="dbg_patchups", action="store_true", help="print module patchup locations"
+    )
 
     args = parser.parse_args()
 
     filetext = open(args.input).read()
 
     m = Module(filetext)
+
+    if args.dbg_emit_trace:
+        print(m.tracetext)
+    if args.dbg_labels:
+        print(m.labels)
+    if args.dbg_patchups:
+        print(m.patchups)
 
     with open(args.output, "wb") as outfile:
         outfile.write(m.bytecode())
