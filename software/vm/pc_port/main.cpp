@@ -48,6 +48,13 @@ public:
       case 0:
          std::printf("%d\n", machine.stack().pop());
          break;
+      // on-target profiling (ignore):
+      case 1:
+         machine.stack().pop();
+         break;
+      case 2:
+         machine.stack().pop();
+         break;
       default:
          std::printf("unknown System call: %d\n", fn_id);
          break;
