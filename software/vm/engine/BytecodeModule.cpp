@@ -1,5 +1,7 @@
 #include "BytecodeModule.hpp"
 
+#include <algorithm>
+#include <array>
 #include <optional>
 
 namespace vm {
@@ -21,9 +23,16 @@ BytecodeModule::BytecodeModule(
 std::expected<BytecodeModule, Error> BytecodeModule::load(
    std::span<unsigned char const> bytecode
 ) {
-   std::size_t cursor = 0;
+   static constexpr std::array<unsigned char, 4> MAGIC{0x5B, 0xC3, 0xB0, 0x0F};
 
-   std::vector<unsigned char> bytecode_copy(bytecode.begin(), bytecode.end());
+   // magic check
+   if((bytecode.size() < MAGIC.size()) ||
+      !std::equal(MAGIC.begin(), MAGIC.end(), bytecode.begin()))
+      return std::unexpected(Error::InvalidHeader);
+
+   std ::vector<unsigned char> bytecode_copy(bytecode.begin(), bytecode.end());
+
+   std::size_t cursor = sizeof(MAGIC);
 
    if(cursor >= bytecode.size())
       return std::unexpected(Error::InvalidHeader);

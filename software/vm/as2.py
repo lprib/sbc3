@@ -504,6 +504,7 @@ class Module:
         if self.module_name is None:
             print("no module_name!")
             exit(1)
+        header.extend([0x5B, 0xC3, 0xB0, 0x0F]) # magic
         header.append(len(self.module_name))
         header.extend(self.module_name.encode("ascii"))
         header.append(len(self.resolved_exports))

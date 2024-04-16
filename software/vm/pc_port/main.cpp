@@ -1,6 +1,7 @@
 // #include "engine.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -29,7 +30,7 @@ public:
    ) override {
 
       // fudge for now
-      if (name == "b") {
+      if(name == "b") {
          auto file = load_from_filename("./vm/programs/module_test_b.bin");
          auto mod = vm::BytecodeModule::load(file);
 
@@ -105,7 +106,6 @@ int main(int argc, char** argv) {
    m.add_module(mod_v);
 
 #ifdef CONSOLE
-   // std::printf("exe program entry")
    // TODO don't hardcode "a" module name
    auto res = m.execute("a", "entry");
    if(res.has_value()) {

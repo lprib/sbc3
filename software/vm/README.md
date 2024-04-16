@@ -3,6 +3,7 @@
 ## module structure
 | name            | size(bytes)     | description                             |
 | --------------- | --------------- | --------------------------------------- |
+| magic           | 4               | 5B C3 B0 0F                             |
 | module_name_len | 1               | length in bytes of name to follow       |
 | module_name     | module_name_len | name data                               |
 | num_fns         | 1               | number of function entries to follow    |
