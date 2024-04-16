@@ -201,9 +201,11 @@ bool Machine::instr() {
       trace("I_RETURN %hu", caller);
       if(is_external_return_addr(caller)) {
          auto calling_module = m_return_stack.pop();
+         trace("   -> external return to %hu", calling_module);
          m_current_module_idx = calling_module;
          m_pc = caller & ~EXTERNAL_RETURN_BIT;
       } else {
+         trace("   -> (internal return)");
          m_pc = caller;
       }
    } break;
@@ -234,7 +236,7 @@ bool Machine::instr() {
          m_system_modules[module_index]->invoke_index(*this, fn_id);
       } else {
          // bytecode module
-         trace("I_EXTERN_CALL INTERNAL %d %d", module_id, fn_id);
+         trace("I_EXTERN_CALL BYTECODE %d %d", module_id, fn_id);
          if(module_id >= m_modules.size()) {
             m_errorno = Error::ModuleNotFound;
             return false;
