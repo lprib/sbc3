@@ -12,6 +12,6 @@ enum class Error {
    ExternCallInvalidFunctionId,
 };
 
-std::string_view error_to_str(Error error);
+char const* error_to_str(Error error);
 
 } // namespace vm

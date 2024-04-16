@@ -2,7 +2,7 @@
 
 namespace vm {
 
-std::string_view error_to_str(Error error) {
+char const* error_to_str(Error error) {
    switch(error) {
    case Error::InvalidHeader:
       return "Invalid header";
