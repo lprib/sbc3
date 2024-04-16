@@ -8,8 +8,9 @@ using namespace std::string_view_literals;
 // Demonstrate some basic assertions.
 TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
    std::vector<unsigned char> module_buf = {
-      5, // module name len
-      'm',  'y', 'm', 'o', 'd',
+      0x5b, 0xc3, 0xb0, 0x0f, // magic
+      5,                      // module name len
+      'm',  'y',  'm',  'o',  'd',
       3, // num exports
       1, // export name len
       'x',
@@ -20,7 +21,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
       0x23, // export offset LSB
       0x01, // export offset MSB
       3,    // export name len
-      'w',  'o', 'w',
+      'w',  'o',  'w',
       0x01, // export offset LSB
       0x00, // export offset MSB
 
@@ -29,7 +30,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
 
    auto result = vm::BytecodeModule::load(module_buf);
    ASSERT_TRUE(result.has_value());
-   auto mod = *result;
+   auto mod = std::move(*result);
 
    EXPECT_EQ(mod.name(), "mymod"sv);
 
@@ -52,7 +53,7 @@ TEST(ParseModuleHeader, CorrectHeader_ParsesFields) {
 }
 
 TEST(ParseModuleHeader, SingleByteHeader_Fails) {
-   std::vector<unsigned char> module_buf = {0};
+   std::vector<unsigned char> module_buf = {0x5b, 0xc3, 0xb0, 0x0f, 0};
 
    auto result = vm::BytecodeModule::load(module_buf);
    EXPECT_FALSE(result.has_value());
@@ -60,7 +61,8 @@ TEST(ParseModuleHeader, SingleByteHeader_Fails) {
 }
 
 TEST(ParseModuleHeader, WrongModuleNameLength_Fails) {
-   std::vector<unsigned char> module_buf = {3, 'a', 'b'};
+   std::vector<unsigned char> module_buf =
+      {0x5b, 0xc3, 0xb0, 0x0f, 3, 'a', 'b'};
 
    auto result = vm::BytecodeModule::load(module_buf);
    EXPECT_FALSE(result.has_value());
@@ -69,7 +71,8 @@ TEST(ParseModuleHeader, WrongModuleNameLength_Fails) {
 
 TEST(ParseModuleHeader, ExportByName_RetrievesExports) {
    std::vector<unsigned char> module_buf = {
-      1, // module name len
+      0x5b, 0xc3, 0xb0, 0x0f, // magic
+      1,                      // module name len
       'a',
       3, // num exports
       1, // export name len
@@ -77,14 +80,11 @@ TEST(ParseModuleHeader, ExportByName_RetrievesExports) {
       0xCD, // export offset LSB
       0xAB, // export offset MSB
       2,    // export name len
-      'q',
-      'r',
+      'q',  'r',
       0x23, // export offset LSB
       0x01, // export offset MSB
       3,    // export name len
-      'w',
-      'o',
-      'w',
+      'w',  'o',  'w',
       0xDE, // export offset LSB
       0xC0, // export offset MSB
    };
