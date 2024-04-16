@@ -15,7 +15,7 @@
 
 #include "raylib.h"
 
-static std::vector<unsigned char> load_from_filename(char const* filename);
+static void load_all_modules(std::filesystem::path working_dir, vm::Machine& m);
 
 class Platform final : public vm::IPlatform {
 public:
@@ -28,20 +28,8 @@ public:
 
    std::optional<vm::BytecodeModule> get_module(std::string_view name
    ) override {
-
-      // fudge for now
-      if(name == "b") {
-         auto file = load_from_filename("./vm/programs/module_test_b.bin");
-         auto mod = vm::BytecodeModule::load(file);
-
-         if(!mod.has_value()) {
-            std::printf("%s\n", vm::error_to_str(mod.error()));
-            return std::nullopt;
-         }
-
-         return *mod;
-      }
-
+      std::cout << "bytecode is requesting module '" << name
+                << "' but we load everything on startup\n";
       return std::nullopt;
    }
 
@@ -85,31 +73,20 @@ private:
 // TODO need to build an index of working_dir module names first!
 
 int main(int argc, char** argv) {
-   if(argc != 2) {
-      std::printf("usage: vm program.bin\n");
+   if(argc != 3) {
+      std::printf("usage: vm working_dir module_name\n");
       std::exit(1);
    }
 
    auto m = vm::Machine(Platform::instance());
    m.add_system_module(&System::instance());
 
-   auto file = load_from_filename(argv[1]);
-   auto mod = vm::BytecodeModule::load(file);
-
-   if(!mod.has_value()) {
-      std::printf("%s\n", vm::error_to_str(mod.error()));
-      return 1;
-   }
-
-   auto mod_v = mod.value();
-
-   m.add_module(mod_v);
+   load_all_modules(argv[1], m);
 
 #ifdef CONSOLE
-   // TODO don't hardcode "a" module name
    auto res = m.execute("a", "entry");
    if(res.has_value()) {
-      std::printf("%s\n", vm::error_to_str(mod.error()));
+      std::printf("%s\n", vm::error_to_str(*res));
    } else {
       std::printf("ok\n");
    }
@@ -147,8 +124,7 @@ int main(int argc, char** argv) {
 #endif
 }
 
-static std::vector<unsigned char> load_from_filename(char const* filename) {
-   std::ifstream file(filename, std::ifstream::binary | std::ifstream::in);
+static std::vector<unsigned char> read_entire_contents(std::ifstream& file) {
    file.unsetf(std::ios::skipws);
    std::streampos filesize;
    file.seekg(0, std::ios::end);
@@ -166,4 +142,42 @@ static std::vector<unsigned char> load_from_filename(char const* filename) {
    );
 
    return vec;
+}
+
+static void load_all_modules(
+   std::filesystem::path working_dir, vm::Machine& m
+) {
+   for(auto const& dir_entry :
+       std::filesystem::directory_iterator{working_dir}) {
+      if(dir_entry.is_regular_file()) {
+         std::ifstream file(dir_entry.path(), std::ifstream::binary);
+         unsigned char magic[4];
+         file.read(reinterpret_cast<char*>(magic), sizeof(magic));
+
+         if(!file.good())
+            continue;
+
+         if(!((magic[0] == 0x5B) && (magic[1] == 0xC3) && (magic[2] == 0xB0) &&
+              (magic[3] == 0x0F)))
+            continue;
+
+         file.clear();
+         file.seekg(0);
+
+         auto bytecode = read_entire_contents(file);
+         auto mod = vm::BytecodeModule::load(bytecode);
+
+         if(!mod.has_value()) {
+            std::cout << dir_entry.path().c_str()
+                      << "had valid magic but could not be loaded: "
+                      << vm::error_to_str(mod.error()) << "\n";
+            continue;
+         }
+
+         std::cout << "loaded " << dir_entry.path().c_str() << " as '"
+                   << mod->name() << "'\n";
+
+         m.add_module(std::move(*mod));
+      }
+   }
 }

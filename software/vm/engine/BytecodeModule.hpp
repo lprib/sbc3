@@ -64,6 +64,7 @@ public:
       }
    }
 #endif
+   BytecodeModule(BytecodeModule&&) = default;
 
 private:
    /// @brief local copy of bytecode
@@ -87,6 +88,12 @@ private:
       std::vector<unsigned char> bytecode, std::string_view module_name,
       std::vector<ExportFunction> exports, int code_start_index
    );
+
+   /// @brief For now delete copy constructor since we are using pointer views
+   /// into std::vector (scary). TODO need to change name etc to on-demand
+   /// string_views using indices.
+   /// @param other
+   BytecodeModule(BytecodeModule const& other) = delete;
 };
 
 } // namespace vm

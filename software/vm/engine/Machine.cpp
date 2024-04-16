@@ -64,13 +64,6 @@ enum Instruction {
    I_LOGICAL_SHIFT_RIGHT = 50,
 };
 
-std::optional<Error> Machine::execute_first_module() {
-   if(m_modules.size() == 0) {
-      return Error::ModuleNotFound;
-   }
-   return execute_by_index(0, "entry");
-}
-
 std::optional<Error> Machine::execute(
    std::string_view module_name, std::string_view fn_name
 ) {
@@ -384,7 +377,7 @@ int Machine::get_or_load_module(std::string_view name) {
       // not found, we need to load it
       auto mod = m_platform.get_module(name);
       if(mod.has_value()) {
-         m_modules.push_back(mod.value());
+         m_modules.push_back(std::move(*mod));
          return m_modules.size() - 1;
       } else {
          // platform couldn't load it

@@ -23,7 +23,6 @@ public:
    std::optional<Error> execute(
       std::string_view module_name, std::string_view fn_name
    );
-   std::optional<Error> execute_first_module();
 
    /// @brief Add system module
    /// @param system_module Module to add. Reference must outlive this Machine
