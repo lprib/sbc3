@@ -270,6 +270,7 @@ class Module:
         self.module_name = None
         self.exports = []
         self.resolved_exports = {}
+        self.diag_opcodes = []
 
         lexer = Lexer(text)
         self.compile_lexer_contents(Lexer(text))
@@ -478,6 +479,7 @@ class Module:
         self.labels[label_name] = len(self.program)
 
     def emit_opcode(self, opcode):
+        self.diag_opcodes.append(OPCODES[opcode])
         self.trace(opcode)
         self.program.append(OPCODES[opcode])
 
@@ -519,13 +521,28 @@ if __name__ == "__main__":
     parser.add_argument("input")
     parser.add_argument("output")
     parser.add_argument(
-        "--dbg-emit-trace", dest="dbg_emit_trace", action="store_true", help="print module assembly trace"
+        "--dbg-emit-trace",
+        dest="dbg_emit_trace",
+        action="store_true",
+        help="print module assembly trace",
     )
     parser.add_argument(
-        "--dbg-labels", dest="dbg_labels", action="store_true", help="print module label locations"
+        "--dbg-labels",
+        dest="dbg_labels",
+        action="store_true",
+        help="print module label locations",
     )
     parser.add_argument(
-        "--dbg-patchups", dest="dbg_patchups", action="store_true", help="print module patchup locations"
+        "--dbg-patchups",
+        dest="dbg_patchups",
+        action="store_true",
+        help="print module patchup locations",
+    )
+    parser.add_argument(
+        "--dbg-opcode-list",
+        dest="dbg_opcode_list",
+        action="store_true",
+        help="print list of numeric opcodes as assembled",
     )
 
     args = parser.parse_args()
@@ -540,6 +557,9 @@ if __name__ == "__main__":
         print(m.labels)
     if args.dbg_patchups:
         print(m.patchups)
+    if args.dbg_opcode_list:
+        for op in m.diag_opcodes:
+            print(op)
 
     with open(args.output, "wb") as outfile:
         outfile.write(m.bytecode())

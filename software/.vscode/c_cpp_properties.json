@@ -10,7 +10,7 @@
             ],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "cStandard": "c17",
-            "cppStandard": "gnu++20",
+            "cppStandard": "gnu++23",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         },
         {

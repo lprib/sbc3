@@ -1,15 +1,21 @@
 
 #include "Machine.hpp"
-namespace vm {
+
+#define MACHINE_LOG_OPCODES (0)
+#if MACHINE_LOG_OPCODES
+#include <fstream>
+static std::ofstream opcode_file;
+#endif
 
 #define MACHINE_TRACE (0)
-
 #if MACHINE_TRACE
 #include <cstdio>
 #define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
 #else
 #define trace(...)
 #endif
+
+namespace vm {
 
 enum Instruction {
    I_NOP = 0,
@@ -88,6 +94,10 @@ std::optional<Error> Machine::execute_by_index(
 
    m_pc = entry.value().bytecode_offset;
 
+   #if MACHINE_LOG_OPCODES
+      opcode_file = std::ofstream("opcodes.csv");
+   #endif
+
    while(instr()) {
    }
 
@@ -116,8 +126,14 @@ bool Machine::instr() {
       return false;
    }
 
+
    // trace("exe %d", m_pc);
    auto instr = pop_progmem();
+
+   #ifdef MACHINE_LOG_OPCODES
+      opcode_file << int{instr} << "\n";
+   #endif
+
    switch(instr) {
    case I_NOP:
       trace("I_NOP");

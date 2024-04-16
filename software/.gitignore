@@ -3,3 +3,5 @@
 build/
 buildpc/
 dbg/
+.venv/
+.ipynb_checkpoints/
