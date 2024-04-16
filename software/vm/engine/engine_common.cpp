@@ -12,6 +12,9 @@ std::string_view error_to_str(Error error) {
       return "`entry` export not found";
    case Error::EofWithoutReturn:
       return "reached end of module without return opcode";
+   case Error::ExternCallInvalidFunctionId:
+      return "attempt to externally call a function id out of bounds for the "
+             "given module";
    default:
       return "<Unknown error>";
    }

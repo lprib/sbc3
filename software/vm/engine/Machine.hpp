@@ -69,6 +69,8 @@ private:
    // numbers as module not found.
    static constexpr int SYSTEM_MODULE_MASK = 0x4000;
 
+   static constexpr StackWord EXTERNAL_RETURN_BIT = 0x8000;
+
    Stack<StackWord> m_stack;
    Stack<StackWord> m_return_stack;
    int m_pc;
@@ -105,6 +107,10 @@ private:
    std::optional<Error> execute_by_index(
       int module_index, std::string_view fn_name
    );
+
+   static bool is_external_return_addr(StackWord return_address) {
+      return return_address & EXTERNAL_RETURN_BIT;
+   }
 };
 
 } // namespace vm

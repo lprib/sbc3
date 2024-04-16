@@ -27,6 +27,20 @@ public:
 
    std::optional<vm::BytecodeModule> get_module(std::string_view name
    ) override {
+
+      // fudge for now
+      if (name == "b") {
+         auto file = load_from_filename("./vm/programs/module_test_b.bin");
+         auto mod = vm::BytecodeModule::load(file);
+
+         if(!mod.has_value()) {
+            std::printf("%s\n", vm::error_to_str(mod.error()));
+            return std::nullopt;
+         }
+
+         return *mod;
+      }
+
       return std::nullopt;
    }
 
@@ -65,7 +79,9 @@ private:
    System() : vm::ISystemModule("system") {}
 };
 
-// #define CONSOLE
+#define CONSOLE
+
+// TODO need to build an index of working_dir module names first!
 
 int main(int argc, char** argv) {
    if(argc != 2) {
@@ -89,7 +105,9 @@ int main(int argc, char** argv) {
    m.add_module(mod_v);
 
 #ifdef CONSOLE
-   auto res = m.execute("program", "entry");
+   // std::printf("exe program entry")
+   // TODO don't hardcode "a" module name
+   auto res = m.execute("a", "entry");
    if(res.has_value()) {
       std::printf("%s\n", vm::error_to_str(mod.error()));
    } else {

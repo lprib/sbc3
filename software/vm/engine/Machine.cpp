@@ -7,10 +7,11 @@
 static std::ofstream opcode_file;
 #endif
 
-#define MACHINE_TRACE (0)
+#define MACHINE_TRACE (1)
 #if MACHINE_TRACE
 #include <cstdio>
-#define trace(fmt, ...) std::printf("machine_trace: " fmt "\n", ##__VA_ARGS__)
+#define trace(fmt, ...)                                                        \
+   std::printf("mod %d: " fmt "\n", m_current_module_idx, ##__VA_ARGS__)
 #else
 #define trace(...)
 #endif
@@ -94,9 +95,9 @@ std::optional<Error> Machine::execute_by_index(
 
    m_pc = entry.value().bytecode_offset;
 
-   #if MACHINE_LOG_OPCODES
-      opcode_file = std::ofstream("opcodes.csv");
-   #endif
+#if MACHINE_LOG_OPCODES
+   opcode_file = std::ofstream("opcodes.csv");
+#endif
 
    while(instr()) {
    }
@@ -126,13 +127,12 @@ bool Machine::instr() {
       return false;
    }
 
-
    // trace("exe %d", m_pc);
    auto instr = pop_progmem();
 
-   #ifdef MACHINE_LOG_OPCODES
-      opcode_file << int{instr} << "\n";
-   #endif
+#if MACHINE_LOG_OPCODES
+   opcode_file << int{instr} << "\n";
+#endif
 
    switch(instr) {
    case I_NOP:
@@ -199,11 +199,18 @@ bool Machine::instr() {
       }
       auto caller = m_return_stack.pop();
       trace("I_RETURN %hu", caller);
-      // TODO inter-module return
-      m_pc = caller;
+      if(is_external_return_addr(caller)) {
+         auto calling_module = m_return_stack.pop();
+         m_current_module_idx = calling_module;
+         m_pc = caller & ~EXTERNAL_RETURN_BIT;
+      } else {
+         m_pc = caller;
+      }
    } break;
    case I_LOAD_MODULE: {
       // TODO unsafe as fuck
+      // need a way of reporing error if cannot be loaded (and maybe a fallible
+      // version)
       auto name_ptr = m_stack.pop();
       auto name_cstr =
          reinterpret_cast<char const*>(&current_code().data()[name_ptr]);
@@ -222,13 +229,26 @@ bool Machine::instr() {
       auto module_id = m_stack.pop();
       if(module_id & SYSTEM_MODULE_MASK) {
          // system module
-         auto module_index = module_id & (~SYSTEM_MODULE_MASK);
+         auto module_index = module_id & ~SYSTEM_MODULE_MASK;
          trace("I_EXTERN_CALL SYSTEM %d %d", module_index, fn_id);
          m_system_modules[module_index]->invoke_index(*this, fn_id);
       } else {
          // bytecode module
-         trace("unimpl");
-         return false;
+         trace("I_EXTERN_CALL INTERNAL %d %d", module_id, fn_id);
+         if(module_id >= m_modules.size()) {
+            m_errorno = Error::ModuleNotFound;
+            return false;
+         }
+         auto& module = m_modules[module_id];
+         auto target_fn = module.nth_export(fn_id);
+         if(!target_fn.has_value()) {
+            m_errorno = Error::ExternCallInvalidFunctionId;
+            return false;
+         }
+         m_return_stack.push(m_current_module_idx);
+         m_return_stack.push(m_pc | EXTERNAL_RETURN_BIT);
+         m_current_module_idx = module_id;
+         m_pc = target_fn->bytecode_offset;
       }
    } break;
    case I_LOAD_WORD: {

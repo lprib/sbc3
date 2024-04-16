@@ -9,6 +9,7 @@ enum class Error {
    ModuleNotFound,
    EntryNotFound,
    EofWithoutReturn,
+   ExternCallInvalidFunctionId,
 };
 
 std::string_view error_to_str(Error error);

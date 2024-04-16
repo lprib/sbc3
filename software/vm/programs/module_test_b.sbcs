@@ -1,0 +1,7 @@
+$module_name "b"
+$export dothething
+
+b_modulename: "b"
+b_module: #00
+
+dothething: 2 * ;
