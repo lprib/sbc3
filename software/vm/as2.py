@@ -289,7 +289,7 @@ class Module:
             if export in self.labels:
                 self.resolved_exports[export] = self.labels[export]
             else:
-                print(f"undefined label for export: {labelname}")
+                print(f"undefined label for export: {export}")
                 exit(1)
 
     def bytecode(self) -> bytearray:
@@ -475,6 +475,9 @@ class Module:
         self.patchups[len(self.program)] = label_name
 
     def register_label_here(self, label_name):
+        if label_name in self.labels:
+            print(f"label {label_name} duplicated")
+            exit(1)
         self.trace(label_name + ":")
         self.labels[label_name] = len(self.program)
 
