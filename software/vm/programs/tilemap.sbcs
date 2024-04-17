@@ -1,4 +1,4 @@
-$module_name "program"
+$module_name "tilemap"
 $export entry
 $export frame
 
