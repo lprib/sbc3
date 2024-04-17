@@ -1,4 +1,4 @@
-$module_name "program"
+$module_name "smiletrail"
 $export entry
 $export frame
 
@@ -16,32 +16,58 @@ print:              &system     @ 0 extern_call ;
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
 blit:               &graphics   @ 2 extern_call ;
+clear_screen:       &graphics   @ 4 extern_call ;
 
 sprite:
-#b8 #b8 #[
-00 00 0F 0F 0F 0F 00 00 
-00 0F 00 00 00 00 0F 00 
-0F 00 0F 00 00 0F 00 0F 
-0F 00 00 00 00 00 00 0F 
-0F 00 0F 00 00 0F 00 0F 
-0F 00 00 0F 0F 00 00 0F 
-00 0F 00 00 00 00 0F 00 
-00 00 0F 0F 0F 0F 00 00 
+#b16 #b16 #[
+0f 0f 0F 0F 0F 0F 0f 0f 0f 0f 0F 0F 0F 0F 0f 0f 
+0f 0F 00 00 00 00 0F 00 00 0F 00 00 00 00 0F 0f 
+0F 00 0F 00 00 0F 00 0F 0F 00 0F 00 00 0F 00 0F 
+0F 00 00 00 00 00 00 0F 0F 00 00 00 00 00 00 0F 
+0F 00 0F 00 00 0F 00 0F 0F 00 0F 00 00 0F 00 0F 
+0F 00 00 0F 0F 00 00 0F 0F 00 00 0F 0F 00 00 0F 
+0f 0F 00 00 00 00 0F 00 00 0F 00 00 00 00 0F 0f 
+0f 00 0F 0F 0F 0F 00 00 00 00 0F 0F 0F 0F 00 0f 
+0f 00 0F 0F 0F 0F 00 00 00 00 0F 0F 0F 0F 00 0f 
+0f 0F 00 00 00 00 0F 00 00 0F 00 00 00 00 0F 0f 
+0F 00 0F 00 00 0F 00 0F 0F 00 0F 00 00 0F 00 0F 
+0F 00 00 00 00 00 00 0F 0F 00 00 00 00 00 00 0F 
+0F 00 0F 00 00 0F 00 0F 0F 00 0F 00 00 0F 00 0F 
+0F 00 00 0F 0F 00 00 0F 0F 00 00 0F 0F 00 00 0F 
+0f 0F 00 00 00 00 0F 00 00 0F 00 00 00 00 0F 0f 
+0f 0f 0F 0F 0F 0F 0f 0f 0f 0f 0F 0F 0F 0F 0f 0f 
 ]
 
-drawpix: (x y --) 256 * + &screen + 15 swap !b ;
-clear: 0 8192 $for [ 0 &screen r@ 2 * + ! ] ;
+drawpix: (x y --) pixeladdr 15 swap !b ;
+
+pixeladdr: (x y -- addr) 256 * + &screen + ;
 
 ++!: dup @ inc swap ! ;
 --!: dup @ dec swap ! ;
+
+fadepix: pixeladdr dup @b dec_ifnot0 swap !b ;
+
+dithery: #0
+ditherwhich: #0
+
+which_inc_a: &ditherwhich @ $if [ 1 + ] ;
+which_inc_b: &ditherwhich @ $ifelse [ ] [ 1 + ] ;
+
+dither_clear_a: (which --)
+    0 32 $for [
+        r@ &dithery !
+        0 127 $for [ r@ 2 * which_inc_a  &dithery @ 2 *      fadepix ]
+        0 127 $for [ r@ 2 * which_inc_b  &dithery @ 2 * 1 +  fadepix ]
+    ]
+;
 
 x: #10
 y: #10
 newx: #0
 newy: #0
 
-xbound: 256 8 - ;
-ybound: 64 8 - ;
+xbound: 256 16 - ;
+ybound: 64 16 - ;
 
 dec_ifnot0: dup 0 > $if [ dec ] ;
 
@@ -55,10 +81,14 @@ between?: (value lower_inclusive upper_exclusive -- between?)
 framenum: #0
 
 frame:
-    (clear)
-
     &framenum ++!
-    &framenum @ 10 % 0 == $if [ fade ]
+    &framenum @ 4 % 0 == $if [ dither_clear_a ]
+
+    &framenum @ 16 % 0 == $if [ 
+        &ditherwhich @ $ifelse
+        [ 0 &ditherwhich !  ]
+        [ 1 &ditherwhich !  ]
+    ]
 
     &x @ &newx !
     &y @ &newy !
@@ -66,7 +96,7 @@ frame:
     (a) 65 iskeydown? $if [ &newx --! ]
     (s) 83 iskeydown? $if [ &newy ++! ]
     (d) 68 iskeydown? $if [ &newx ++! ]
-    (space) 32 iskeydown? $if [ clear ]
+    (space) 32 iskeydown? $if [ clear_screen ]
 
     &newx @ 1 xbound between? $if [ &newx @ &x ! ]
     &newy @ 1 ybound between? $if [ &newy @ &y ! ]
