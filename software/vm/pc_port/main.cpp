@@ -68,7 +68,7 @@ private:
    System() : vm::ISystemModule("system") {}
 };
 
-#define CONSOLE
+// #define CONSOLE
 
 // TODO need to build an index of working_dir module names first!
 
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
    load_all_modules(argv[1], m);
 
 #ifdef CONSOLE
-   auto res = m.execute("a", "entry");
+   auto res = m.execute(argv[2], "entry");
    if(res.has_value()) {
       std::printf("%s\n", vm::error_to_str(*res));
    } else {
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 #else
    m.add_system_module(&GraphicsModule::instance());
 
-   auto err = m.execute("program", "entry");
+   auto err = m.execute(argv[2], "entry");
 
    if(err.has_value()) {
       std::cout << vm::error_to_str(err.value()) << "\n";
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
    SetTargetFPS(60);           // Set our game to run at 60 frames-per-second
    while(!WindowShouldClose()) // Detect window close button or ESC key
    {
-      m.execute("program", "frame");
+      m.execute(argv[2], "frame");
       BeginDrawing();
       {
          ClearBackground(BLACK);

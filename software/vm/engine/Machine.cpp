@@ -7,7 +7,7 @@
 static std::ofstream opcode_file;
 #endif
 
-#define MACHINE_TRACE (1)
+#define MACHINE_TRACE (0)
 #if MACHINE_TRACE
 #include <cstdio>
 #define trace(fmt, ...)                                                        \
