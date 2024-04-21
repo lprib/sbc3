@@ -10,9 +10,9 @@
 #include "screen.hpp"
 #include "serial.hpp"
 
-#include "BaseModuleShim.hpp"
+#include "BaseModuleCommon.hpp"
 #include "BytecodeModule.hpp"
-#include "GraphicsModuleShim.hpp"
+#include "GraphicsModuleCommon.hpp"
 #include "IPlatform.hpp"
 #include "ISystemModule.hpp"
 #include "Machine.hpp"
@@ -53,7 +53,7 @@ private:
    long m_end_time = 0;
 };
 
-class Base final : public vm::BaseModuleShim {
+class Base final : public vm::BaseModuleCommon {
 public:
    void print_decimal(vm::StackWord word) override {
       char out[20];
@@ -80,7 +80,7 @@ private:
    std::array<ProfileTimer, N_PROFILE_TIMER> m_profile_timers;
 };
 
-class GraphicsModule final : public vm::GraphicsModuleShim {
+class GraphicsModule final : public vm::GraphicsModuleCommon {
 public:
    bool is_key_down(vm::StackWord key) override {
       if(key == 65) {

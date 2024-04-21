@@ -1,9 +1,9 @@
 #pragma once
 
-#include "GraphicsModuleShim.hpp"
+#include "GraphicsModuleCommon.hpp"
 #include "Machine.hpp"
 
-class RaylibGraphicsModule final : public vm::GraphicsModuleShim {
+class RaylibGraphicsModule final : public vm::GraphicsModuleCommon {
 public:
    void draw(vm::Machine& machine);
 

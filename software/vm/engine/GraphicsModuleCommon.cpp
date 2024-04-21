@@ -1,8 +1,8 @@
-#include "GraphicsModuleShim.hpp"
+#include "GraphicsModuleCommon.hpp"
 
 namespace vm {
 
-void GraphicsModuleShim::blit(
+void GraphicsModuleCommon::blit(
    Machine& m, StackWord x, StackWord y, StackWord sprite_ptr
 ) {
 

@@ -5,7 +5,7 @@
 
 namespace vm {
 
-class GraphicsModuleShim : public vm::ISystemModule {
+class GraphicsModuleCommon : public vm::ISystemModule {
 public:
    static constexpr int SCREEN_WIDTH = 256;
    static constexpr int SCREEN_HEIGHT = 64;
@@ -64,7 +64,7 @@ public:
       std::fill(display.begin(), display.end(), 0);
    }
 
-   GraphicsModuleShim() : vm::ISystemModule("graphics") {}
+   GraphicsModuleCommon() : vm::ISystemModule("graphics") {}
 
 protected:
    int m_display_buff_bytecode_address = 0;

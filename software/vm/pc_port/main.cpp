@@ -7,7 +7,7 @@
 #include <optional>
 #include <vector>
 
-#include "BaseModuleShim.hpp"
+#include "BaseModuleCommon.hpp"
 #include "BytecodeModule.hpp"
 #include "IPlatform.hpp"
 #include "ISystemModule.hpp"
@@ -41,7 +41,7 @@ private:
    Platform(){};
 };
 
-class Base final : public vm::BaseModuleShim {
+class Base final : public vm::BaseModuleCommon {
 public:
    void print_decimal(vm::StackWord word) override {
       std::printf("%d\n", word);

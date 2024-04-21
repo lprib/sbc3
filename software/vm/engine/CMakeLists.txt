@@ -2,11 +2,11 @@ add_library(engine)
 
 target_sources(engine
 PRIVATE
-    BaseModuleShim.hpp
+    BaseModuleCommon.hpp
     BytecodeModule.cpp
     BytecodeModule.hpp
-    GraphicsModuleShim.hpp
-    GraphicsModuleShim.cpp
+    GraphicsModuleCommon.hpp
+    GraphicsModuleCommon.cpp
     IPlatform.hpp
     ISystemModule.hpp
     Machine.cpp

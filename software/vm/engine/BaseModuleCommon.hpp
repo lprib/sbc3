@@ -5,7 +5,7 @@
 
 namespace vm {
 
-class BaseModuleShim : public vm::ISystemModule {
+class BaseModuleCommon : public vm::ISystemModule {
 public:
    enum Fn {
       PRINT_DECIMAL = 0,
@@ -35,7 +35,7 @@ public:
    virtual void profile_start(StackWord id) = 0;
    virtual void profile_end(StackWord id) = 0;
 
-   BaseModuleShim() : vm::ISystemModule("base") {}
+   BaseModuleCommon() : vm::ISystemModule("base") {}
 
 private:
 };
