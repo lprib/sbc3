@@ -4,13 +4,13 @@ $export entry
 b_modulename: "b"
 b_module: #00
 
-system_name: "system"
-system: #0
+base_name: "base"
+base: #0
 
-print: &system @ 0 extern_call ;
+print: &base @ 0 extern_call ;
 
 entry: 
-   &system_name load_module &system !
+   &base_name load_module &base !
    &b_modulename load_module &b_module !
    42 &b_module @ 0 extern_call
    print

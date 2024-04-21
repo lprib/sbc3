@@ -5,8 +5,8 @@ add_executable(pc_port)
 target_sources(pc_port
 PRIVATE
     main.cpp
-    GraphicsModule.hpp
-    GraphicsModule.cpp
+    RaylibGraphicsModule.hpp
+    RaylibGraphicsModule.cpp
 )
 
 target_link_libraries(pc_port

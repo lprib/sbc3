@@ -135,22 +135,19 @@ public:
       case IS_KEY_DOWN: {
          // ( key -- down? )
          auto key = machine.stack().pop();
-         auto result = vm::Machine::TRUE_WORD;
+         auto result = vm::TRUE_WORD;
          if(key == 65) {
             // a
-            result = buttons::get_state(buttons::Button::Left)
-                        ? vm::Machine::TRUE_WORD
-                        : vm::Machine::FALSE_WORD;
+            result =
+               vm::to_stackword(buttons::get_state(buttons::Button::Left));
          } else if(key == 68) {
             // d
-            result = buttons::get_state(buttons::Button::Right)
-                        ? vm::Machine::TRUE_WORD
-                        : vm::Machine::FALSE_WORD;
+            result =
+               vm::to_stackword(buttons::get_state(buttons::Button::Right));
          } else if(key == 87) {
             // s
-            result = buttons::get_state(buttons::Button::Rotary)
-                        ? vm::Machine::TRUE_WORD
-                        : vm::Machine::FALSE_WORD;
+            result =
+               vm::to_stackword(buttons::get_state(buttons::Button::Rotary));
          }
          machine.stack().push(result);
       } break;

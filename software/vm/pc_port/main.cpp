@@ -7,15 +7,18 @@
 #include <optional>
 #include <vector>
 
+#include "BaseModuleShim.hpp"
 #include "BytecodeModule.hpp"
-#include "GraphicsModule.hpp"
 #include "IPlatform.hpp"
 #include "ISystemModule.hpp"
 #include "Machine.hpp"
+#include "RaylibGraphicsModule.hpp"
 
 #include "raylib.h"
 
-static void load_all_modules(std::filesystem::path working_dir, vm::Machine& m);
+static void load_all_bytecode_from_working_dir(
+   std::filesystem::path working_dir, vm::Machine& m
+);
 
 class Platform final : public vm::IPlatform {
 public:
@@ -29,7 +32,8 @@ public:
    std::optional<vm::BytecodeModule> get_module(std::string_view name
    ) override {
       std::cout << "bytecode is requesting module '" << name
-                << "' but we load everything on startup\n";
+                << "' but it was not found (all modules loaded once on startup "
+                   "in this port)\n";
       return std::nullopt;
    }
 
@@ -37,35 +41,20 @@ private:
    Platform(){};
 };
 
-class System final : public vm::ISystemModule {
+class Base final : public vm::BaseModuleShim {
 public:
-   System(const System&) = delete;
-   System& operator=(const System&) = delete;
-   static System& instance() {
-      static System inst;
-      return inst;
+   void print_decimal(vm::StackWord word) override {
+      std::printf("%d\n", word);
    }
 
-   void invoke_index(vm::Machine& machine, int fn_id) override {
-      switch(fn_id) {
-      case 0:
-         std::printf("%d\n", machine.stack().pop());
-         break;
-      // on-target profiling (ignore):
-      case 1:
-         machine.stack().pop();
-         break;
-      case 2:
-         machine.stack().pop();
-         break;
-      default:
-         std::printf("unknown System call: %d\n", fn_id);
-         break;
-      }
+   void profile_start(vm::StackWord id) override {
+      // not impl
+   }
+   void profile_end(vm::StackWord id) override {
+      // not impl
    }
 
 private:
-   System() : vm::ISystemModule("system") {}
 };
 
 // #define CONSOLE
@@ -79,9 +68,10 @@ int main(int argc, char** argv) {
    }
 
    auto m = vm::Machine(Platform::instance());
-   m.add_system_module(&System::instance());
+   auto base_module = Base();
+   m.add_system_module(&base_module);
 
-   load_all_modules(argv[1], m);
+   load_all_bytecode_from_working_dir(argv[1], m);
 
 #ifdef CONSOLE
    auto res = m.execute(argv[2], "entry");
@@ -92,7 +82,8 @@ int main(int argc, char** argv) {
    }
 
 #else
-   m.add_system_module(&GraphicsModule::instance());
+   auto raylib_graphics_module = RaylibGraphicsModule();
+   m.add_system_module(&raylib_graphics_module);
 
    auto err = m.execute(argv[2], "entry");
 
@@ -102,8 +93,8 @@ int main(int argc, char** argv) {
    }
 
    InitWindow(
-      GraphicsModule::SCREEN_WIDTH_PX,
-      GraphicsModule::SCREEN_HEIGHT_PX,
+      RaylibGraphicsModule::SCREEN_WIDTH_PX,
+      RaylibGraphicsModule::SCREEN_HEIGHT_PX,
       "vm graphics"
    );
 
@@ -114,7 +105,7 @@ int main(int argc, char** argv) {
       BeginDrawing();
       {
          ClearBackground(BLACK);
-         GraphicsModule::instance().draw(m);
+         raylib_graphics_module.draw(m);
          DrawFPS(0, 0);
       }
       EndDrawing();
@@ -144,7 +135,7 @@ static std::vector<unsigned char> read_entire_contents(std::ifstream& file) {
    return vec;
 }
 
-static void load_all_modules(
+static void load_all_bytecode_from_working_dir(
    std::filesystem::path working_dir, vm::Machine& m
 ) {
    for(auto const& dir_entry :

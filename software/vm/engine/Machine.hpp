@@ -12,6 +12,13 @@ namespace vm {
 
 using StackWord = short;
 
+static constexpr StackWord TRUE_WORD = 0xffff;
+static constexpr StackWord FALSE_WORD = 0;
+
+inline constexpr StackWord to_stackword(bool boolean) {
+   return boolean ? TRUE_WORD : FALSE_WORD;
+}
+
 class Machine {
 public:
    Machine(IPlatform& platform) :
@@ -56,9 +63,6 @@ public:
    BytecodeModule& module_by_index(int index) {
       return m_modules[index];
    }
-
-   static constexpr StackWord TRUE_WORD = 0xffff;
-   static constexpr StackWord FALSE_WORD = 0;
 
 private:
    static constexpr int STACK_SIZE = 0x100;

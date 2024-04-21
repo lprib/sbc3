@@ -78,7 +78,8 @@
         "iostream": "cpp",
         "valarray": "cpp",
         "*.m": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "stdfloat": "cpp"
     },
     // "cortex-debug.gdbPath": "gdb-multiarch",
     "cortex-debug.gdbPath": "arm-none-eabi-gdb",

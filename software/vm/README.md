@@ -208,3 +208,16 @@ Add the number of zeros to program memory here.
 - Saves writing &variable, could make `variable` push the address, while `function` emits a call_imm
 - Don't need to put large `$zeros` sections in to the data. Can be in header and expanded on load
 - Ease of writing a full compiler
+
+
+# Assembler v3: self hosted
+Language requirements before self-hosting
+- Better IO abstractions from system module:
+  - filesystem abstraction?
+- malloc/free with objects shared between modules?
+    - if we commit to the 64k address space
+
+
+# TODO for selfhosting
+- [ ] Better shared code for standardized modules
+- [ ] Standardized file io

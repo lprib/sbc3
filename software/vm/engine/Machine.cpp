@@ -111,7 +111,7 @@ std::optional<Error> Machine::execute_by_index(
       auto r = m_stack.pop();                                                  \
       auto l = m_stack.pop();                                                  \
       trace(#_opcode " %d %d", l, r);                                          \
-      m_stack.push((l _op r) ? TRUE_WORD : FALSE_WORD);                        \
+      m_stack.push(to_stackword(l _op r));                                     \
    } break
 
 bool Machine::instr() {

@@ -2,17 +2,17 @@ $module_name "smiletrail"
 $export entry
 $export frame
 
-system_name: "system"
-system: #0
+base_name: "base"
+base: #0
 
 graphics_name: "graphics"
 graphics: #0
 
 
-load_system: &system_name load_module &system ! ;
+load_base: &base_name load_module &base ! ;
 load_graphics: &graphics_name load_module &graphics ! ;
 
-print:              &system     @ 0 extern_call ;
+print:              &base     @ 0 extern_call ;
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
 blit:               &graphics   @ 2 extern_call ;
@@ -105,7 +105,7 @@ frame:
 ;
 
 entry:
-    load_system
+    load_base
     load_graphics
     &screen set_display_buf
 ;
