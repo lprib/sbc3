@@ -188,7 +188,7 @@ Add the number of zeros to program memory here.
 
 # todo
 - [ ] opcodes finish
-- [ ] inter-module calls and rets
+- [x] inter-module calls and rets
 - [ ] port assembler to cpp
 - [ ] unit test?
 - [x] raylib frontend with graphics (MVP)
