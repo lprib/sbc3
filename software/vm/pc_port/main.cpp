@@ -98,8 +98,8 @@ int main(int argc, char** argv) {
       "vm graphics"
    );
 
-   SetTargetFPS(60);           // Set our game to run at 60 frames-per-second
-   while(!WindowShouldClose()) // Detect window close button or ESC key
+   SetTargetFPS(30);
+   while(!WindowShouldClose())
    {
       m.execute(argv[2], "frame");
       BeginDrawing();

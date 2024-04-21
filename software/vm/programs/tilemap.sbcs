@@ -171,9 +171,9 @@ rand-upto-16: 0 0 4 $for [ 1 << rand 1 and or ] ;
 (particle: x y vx vy t)
 (100 particles at 12 words each)
 (x: 8*px, y: 8*px, vx: 64*px, vy: 64*px)
-pcls: $zeros #2800
+pcls: $zeros #5600
 
-n-pcls: 200 ;
+n-pcls: 400 ;
 pcl-siz: 14 ;
 
 (idx --)
@@ -188,7 +188,7 @@ pcl-color: pcl-siz * &pcls + 12 + ;
 vel2pos: 8 / ;
 pos2pix: 8 / ;
 
-gravity: 3 ;
+gravity: 10 ;
 
 update-pcl: (idx --)
     >r
@@ -248,7 +248,7 @@ _ex: #0;
 _ey: #0;
 _explosion_pcl_idx: #0
 
-_pcl_per_explosion: 20 ;
+_pcl_per_explosion: 50 ;
 
 explosion: (x y --)
     &_ey ! &_ex !
@@ -258,9 +258,9 @@ explosion: (x y --)
     $for [
         (x) &_ex @ 8 * rand-upto-64 +
         (y) &_ey @ 8 * rand-upto-64 +
-        (vx) rand-upto-64 32 - 3 * 2 /
-        (vy) rand-upto-64 0 swap - 3 * 2 /
-        (lifetime) rand-upto-64 (3 *)
+        (vx) rand-upto-64 32 - 3 *
+        (vy) rand-upto-64 0 swap - 3 *
+        (lifetime) rand-upto-64 3 * 2 / 10 +
         (color) rand-upto-16 2 / 8 +
 
         r@ pcl-new

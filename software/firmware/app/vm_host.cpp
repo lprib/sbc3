@@ -19,7 +19,8 @@
 
 namespace vmhost {
 
-#define PRINT_PROFILE (0)
+#define PRINT_FRAME_TIME (1)
+#define PRINT_VM_PROFILE_TIMERS (0)
 
 void task(void* arg);
 
@@ -157,12 +158,18 @@ void task(void* arg) {
       graphics.draw(m);
       long elapsed_draw = xTaskGetTickCount() - start_draw;
 
-#if PRINT_PROFILE
-
+#if PRINT_FRAME_TIME
       char out[40];
       std::snprintf(out, 40, "vm: %ld draw:%ld", elapsed_vm, elapsed_draw);
       serial::println(out);
+#else
+      (void)start_vm;
+      (void)elapsed_vm;
+      (void)start_draw;
+      (void)elapsed_draw;
+#endif
 
+#if PRINT_VM_PROFILE_TIMERS
       // report profile timers
       int i = 0;
       for(auto const& n : base.profile_timers()) {
@@ -171,12 +178,8 @@ void task(void* arg) {
          serial::println(out);
          ++i;
       }
-#else
-      (void)start_vm;
-      (void)elapsed_vm;
-      (void)start_draw;
-      (void)elapsed_draw;
 #endif
+
    }
 }
 
