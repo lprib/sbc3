@@ -3,6 +3,34 @@ Self contained board that can be easily programmed on target for fun little
 games or GUIs. Inspired by the environment presented by TI calculators and
 TI-BASIC.
 
+# Directory structure
+```
+sbc3
+|_ art: various images for putting on PCB and for on-screen graphics
+|_ cubemx: STM32 CubeMX projects for pinmapping
+|_ docs: datasheets etc
+|  |_ cpu_hardware: hardware support and layout for STM32s
+|  |_ hardware: various datasheets for parts used
+|  \_ sofware: CPU ref manuals etc
+|_ img: images for docs
+|_ keyboard_v1: kicad project for keyboard
+|_ main_board_v1: kicad project for main board
+|_ rust_firmware: Firmware and screen driver in Rust (abandoned for now)
+\_ software: (mostly c++) software and firmware
+   |_ cmake: cmake scripts
+   |_ firmware: firmware for main_board_v1
+   |  |_ app: main application sources
+   |  \_ (other dirs): supporting libraries unchanged from CubeMX/FreeRTOS upstream
+   \_ vm: virtual machine
+      |_ analysis: jupyter notebook for vm stat calculations
+      |_ engine: main vm sources (portable)
+      |_ pc_port: raylib port of VM for desktop
+      |_ programs: sbc3 assembly programs
+      |_ tests: vm unit tests (lol)
+      |_ vscode-extension-sbcs-syntax: syntax support in VSCode for SBC3 assembly
+      \_ as2.py: sbc3 vm bytecode assembler
+```
+
 ## Components
 ### main_board_v1
 #### System diagram
@@ -18,8 +46,7 @@ TI-BASIC.
   - 475900001 Micro-USB connector
   - LD1117S33TR 3V3 Linear Regulator
     - Honestly can't remember why I went for this one instead of the JLC
-    preferred part AMS1117-3.3.
-    point and needed low quiescent?
+    preferred part AMS1117-3.3. Maybe max current
   - LD1117S18TR 1V8 Linear Regulator (for DAC)
   - STM32F405VGT6 MCU
 
