@@ -25,7 +25,8 @@ public:
          profile_end(machine.stack().pop());
          break;
       default:
-         std::printf("unknown call to base: %d\n", fn_id);
+         // TODO platform agnostic logging
+         // std::printf("unknown call to base: %d\n", fn_id);
          break;
       }
    }

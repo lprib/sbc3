@@ -6,6 +6,7 @@ PRIVATE
     BytecodeModule.cpp
     BytecodeModule.hpp
     GraphicsModuleShim.hpp
+    GraphicsModuleShim.cpp
     IPlatform.hpp
     ISystemModule.hpp
     Machine.cpp

@@ -5,46 +5,11 @@
 #include <array>
 #include <iostream>
 
-void RaylibGraphicsModule::set_display_buf(vm::StackWord buff_ptr) {
-   m_display_buff_bytecode_address = buff_ptr;
-}
-
 bool RaylibGraphicsModule::is_key_down(vm::StackWord key) {
    return IsKeyDown(key);
 }
 bool RaylibGraphicsModule::is_key_pressed(vm::StackWord key) {
    return IsKeyPressed(key);
-}
-void RaylibGraphicsModule::blit(
-   vm::Machine& m, vm::StackWord x, vm::StackWord y, vm::StackWord sprite_ptr
-) {
-
-   auto code = m.current_module().code();
-
-   auto sprite_width = code[sprite_ptr];
-   auto sprite_height = code[sprite_ptr + 1];
-   auto sprite = code.subspan(sprite_ptr + 2, sprite_width * sprite_height);
-
-   // std::cout << "blit x:" << x << " y:" << y << " ptr:" << sprite_ptr << "
-   // w:"
-   //           << sprite_width << " h:" << sprite_height << "\n";
-
-   for(int y_iter = 0; y_iter < sprite_height; ++y_iter) {
-      auto dest_y = y + y_iter;
-      auto src_row = sprite.subspan(y_iter * sprite_width, sprite_width);
-      auto dest_row = code.subspan(
-         m_display_buff_bytecode_address + dest_y * SCREEN_WIDTH + x,
-         sprite_width
-      );
-      std::copy(src_row.begin(), src_row.end(), dest_row.begin());
-   }
-}
-void RaylibGraphicsModule::clear_screen(vm::Machine& m) {
-   auto display = m.current_module().code().subspan(
-      m_display_buff_bytecode_address,
-      SCREEN_WIDTH * SCREEN_HEIGHT
-   );
-   std::fill(display.begin(), display.end(), 0);
 }
 
 static constexpr std::array<Color, 16> colormap = {

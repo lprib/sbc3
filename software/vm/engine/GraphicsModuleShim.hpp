@@ -7,6 +7,9 @@ namespace vm {
 
 class GraphicsModuleShim : public vm::ISystemModule {
 public:
+   static constexpr int SCREEN_WIDTH = 256;
+   static constexpr int SCREEN_HEIGHT = 64;
+
    enum Fn {
       SET_DISPLAY_BUF = 0,
       IS_KEY_DOWN = 1,
@@ -39,22 +42,32 @@ public:
          clear_screen(machine);
          break;
       default:
-         std::printf("unknown call to graphics: %d\n", fn_id);
+         // TODO platform agnostic logging
+         // std::printf("unknown call to graphics: %d\n", fn_id);
          break;
       }
    }
 
-   virtual void set_display_buf(StackWord buff_ptr) = 0;
+   virtual void set_display_buf(StackWord buff_ptr) {
+      m_display_buff_bytecode_address = buff_ptr;
+   };
    virtual bool is_key_down(StackWord key) = 0;
    virtual bool is_key_pressed(StackWord key) = 0;
    virtual void blit(
       vm::Machine& m, StackWord x, StackWord y, StackWord sprite_ptr
-   ) = 0;
-   virtual void clear_screen(vm::Machine& m) = 0;
+   );
+   virtual void clear_screen(vm::Machine& m) {
+      auto display = m.current_module().code().subspan(
+         m_display_buff_bytecode_address,
+         SCREEN_WIDTH * SCREEN_HEIGHT
+      );
+      std::fill(display.begin(), display.end(), 0);
+   }
 
    GraphicsModuleShim() : vm::ISystemModule("graphics") {}
 
-private:
+protected:
+   int m_display_buff_bytecode_address = 0;
 };
 
 } // namespace vm

@@ -113,6 +113,7 @@ void vApplicationGetIdleTaskMemory(
 }
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char* pcTaskName) {
+   (void)xTask;
    serial::println(pcTaskName);
    error::error();
 }
