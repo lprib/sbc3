@@ -15,7 +15,6 @@ public:
       IS_KEY_DOWN = 1,
       BLIT = 2,
       IS_KEY_PRESSED = 3,
-      CLEAR_SCREEN = 4,
    };
 
    void invoke_index(vm::Machine& machine, int fn_id) override final {
@@ -38,9 +37,6 @@ public:
          auto x = machine.stack().pop();
          blit(machine, x, y, spriteptr);
       } break;
-      case CLEAR_SCREEN:
-         clear_screen(machine);
-         break;
       default:
          // TODO platform agnostic logging
          // std::printf("unknown call to graphics: %d\n", fn_id);
@@ -48,26 +44,19 @@ public:
       }
    }
 
-   virtual void set_display_buf(StackWord buff_ptr) {
-      m_display_buff_bytecode_address = buff_ptr;
+   virtual void set_display_buf(StackWord sbuf_idx) {
+      m_sbuf_idx = sbuf_idx;
    };
    virtual bool is_key_down(StackWord key) = 0;
    virtual bool is_key_pressed(StackWord key) = 0;
    virtual void blit(
       vm::Machine& m, StackWord x, StackWord y, StackWord sprite_ptr
    );
-   virtual void clear_screen(vm::Machine& m) {
-      auto display = m.current_module().code().subspan(
-         m_display_buff_bytecode_address,
-         SCREEN_WIDTH * SCREEN_HEIGHT
-      );
-      std::fill(display.begin(), display.end(), 0);
-   }
 
    GraphicsModuleCommon() : vm::ISystemModule("graphics") {}
 
 protected:
-   int m_display_buff_bytecode_address = 0;
+   int m_sbuf_idx = 0;
 };
 
 } // namespace vm

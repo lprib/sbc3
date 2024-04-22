@@ -102,9 +102,9 @@ public:
    }
 
    void draw(vm::Machine& machine) {
-      auto progmem = machine.current_module().code();
+      auto& sbuf = machine.sbufs()[m_sbuf_idx];
       screen::update(std::span<unsigned char, screen::DISPLAY_SIZE>(
-         progmem.subspan(m_display_buff_bytecode_address, screen::DISPLAY_SIZE)
+         std::span(sbuf).subspan(0, screen::DISPLAY_SIZE)
       ));
    }
 };
@@ -179,7 +179,6 @@ void task(void* arg) {
          ++i;
       }
 #endif
-
    }
 }
 

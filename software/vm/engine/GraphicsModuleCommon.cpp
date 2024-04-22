@@ -5,8 +5,8 @@ namespace vm {
 void GraphicsModuleCommon::blit(
    Machine& m, StackWord x, StackWord y, StackWord sprite_ptr
 ) {
-
    auto code = m.current_module().code();
+   auto& display_sbuf = m.sbufs()[m_sbuf_idx];
 
    auto sprite_width = code[sprite_ptr];
    auto sprite_height = code[sprite_ptr + 1];
@@ -19,10 +19,8 @@ void GraphicsModuleCommon::blit(
    for(int y_iter = 0; y_iter < sprite_height; ++y_iter) {
       auto dest_y = y + y_iter;
       auto src_row = sprite.subspan(y_iter * sprite_width, sprite_width);
-      auto dest_row = code.subspan(
-         m_display_buff_bytecode_address + dest_y * SCREEN_WIDTH + x,
-         sprite_width
-      );
+      auto dest_row = std::span(display_sbuf)
+                         .subspan(dest_y * SCREEN_WIDTH + x, sprite_width);
       std::copy(src_row.begin(), src_row.end(), dest_row.begin());
    }
 }

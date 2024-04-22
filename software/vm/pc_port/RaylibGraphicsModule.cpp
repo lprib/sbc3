@@ -32,11 +32,10 @@ static constexpr std::array<Color, 16> colormap = {
 };
 
 void RaylibGraphicsModule::draw(vm::Machine& machine) {
-   auto progmem = machine.current_module().code();
+   auto& sbuf = machine.sbufs()[m_sbuf_idx];
    for(int y = 0; y < SCREEN_HEIGHT; ++y) {
       for(int x = 0; x < SCREEN_WIDTH; ++x) {
-         auto pix =
-            progmem[m_display_buff_bytecode_address + (y * SCREEN_WIDTH + x)];
+         auto pix = sbuf[y * SCREEN_WIDTH + x];
          DrawRectangle(
             x * PX_PADDED_SIZE,
             y * PX_PADDED_SIZE,

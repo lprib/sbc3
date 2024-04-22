@@ -2,11 +2,12 @@ add_library(engine)
 
 target_sources(engine
 PRIVATE
+    BaseModuleCommon.cpp
     BaseModuleCommon.hpp
     BytecodeModule.cpp
     BytecodeModule.hpp
-    GraphicsModuleCommon.hpp
     GraphicsModuleCommon.cpp
+    GraphicsModuleCommon.hpp
     IPlatform.hpp
     ISystemModule.hpp
     Machine.cpp

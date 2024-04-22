@@ -9,20 +9,34 @@ graphics: #0
 load_base: &base_name load_module &base ! ;
 load_graphics: &graphics_name load_module &graphics ! ;
 
-print:              &base     @ 0 extern_call ;
-profile_start:      &base     @ 1 extern_call ;
-profile_end:        &base     @ 2 extern_call ;
+print:          &base   @ 0 extern_call ;
+profile_start:  &base   @ 1 extern_call ;
+profile_end:    &base   @ 2 extern_call ;
+sbuf_new:       &base   @ 3 extern_call ;
+sbuf_delete:    &base   @ 4 extern_call ;
+sbuf_copyto:    &base   @ 5 extern_call ;
+sbuf_copyfrom:  &base   @ 6 extern_call ;
+sbuf_writebyte: &base   @ 7 extern_call ;
+sbuf_readbyte:  &base   @ 8 extern_call ;
+sbuf_fill:      &base   @ 9 extern_call ;
 
 set_display_buf:    &graphics   @ 0 extern_call ;
 iskeydown?:         &graphics   @ 1 extern_call ;
 blit:               &graphics   @ 2 extern_call ;
 iskeypressed?:      &graphics   @ 3 extern_call ;
-clear_screen:       &graphics   @ 4 extern_call ;
 
-drawpix: (x y color --) >r 256 * + &screen + r> swap !b ;
+(
+drawpix: (x y color--) >r 256 * + &screen + r> swap !b ;
+)
+drawpix: (x y color--) >r 256 * + r> &graphics_sbuf @ sbuf_writebyte ;
 
 ++!: dup @ inc swap ! ;
 --!: dup @ dec swap ! ;
+
+graphics_sbuf: #0
+setup_graphics: 16384 sbuf_new dup &graphics_sbuf ! set_display_buf ;
+
+clear_screen: 0 16384 0 &graphics_sbuf @ sbuf_fill ;
 
 sprite_size: 66 ;
 
@@ -281,7 +295,7 @@ incr_explosion_idx:
 entry:
     load_base
     load_graphics
-    &screen set_display_buf
+    setup_graphics
     generate_map
 ;
 
@@ -365,6 +379,3 @@ sprite_me:
 00 04 09 04 09 09 06 00
 00 04 04 00 04 04 00 00
 ]
-
-screen:
-$zeros #16384

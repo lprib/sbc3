@@ -64,6 +64,10 @@ public:
       return m_modules[index];
    }
 
+   std::vector<std::vector<unsigned char>>& sbufs() {
+      return m_sbufs;
+   }
+
 private:
    static constexpr int STACK_SIZE = 0x100;
    static constexpr int RETURN_STACK_SIZE = 0x100;
@@ -81,6 +85,10 @@ private:
 
    std::vector<BytecodeModule> m_modules;
    std::vector<ISystemModule*> m_system_modules;
+
+   // sbufs: shared buffers. Userland interface is defined in
+   // BaseModuleCommon.hpp
+   std::vector<std::vector<unsigned char>> m_sbufs;
 
    IPlatform& m_platform;
    std::optional<Error> m_errorno;

@@ -186,6 +186,78 @@ $zeros #100
 ```
 Add the number of zeros to program memory here.
 
+
+## Standard system modules
+For portability, the most basic modules should have a consistent interface
+across platforms. This is done through `*ModuleCommon` shims which reside in the
+portable vm and implement `ISystemModule`. They implement the portable bits of a
+module and use pure virtuals so that each port can fill in the rest.
+
+There are currently only two portable system modules: `base` and `graphics`.
+
+### Base
+See [`engine/BaseModuleCommon`](./engine/BaseModuleCommon.cpp).
+| index | name           | args                             | description                        |
+| ----- | -------------- | -------------------------------- | ---------------------------------- |
+| 0     | print_decimal  | `n --`                           | print n as decimal                 |
+| 1     | profile_start  | `idx --`                         | start profile timer IDX            |
+| 2     | profile_end    | `idx --`                         | stop profile timer IDX             |
+| 3     | sbuf_new       | `length -- handle`               | allocate a new sbuf, return handle |
+| 4     | sbuf_delete    | `handle --`                      | delete sbuf (not impl)             |
+| 5     | sbuf_copyto    | `start len dest_start handle --` | [sbuf_copyto](#sbuf_copyto)        |
+| 6     | sbuf_copyfrom  | `start len dest_start handle --` | [sbuf_copyfrom](#sbuf_copyfrom)    |
+| 7     | sbuf_writebyte | `index byte handle --`           | [sbuf_writebyte](#sbuf_writebyte)  |
+| 8     | sbuf_readbyte  | `index handle -- byte`           | [sbuf_readbyte](#sbuf_readbyte)    |
+| 9     | sbuf_fill      | `start len byte handle --`       | [sbuf_fill](#sbuf_fill)            |
+
+### Graphics
+See [`engine/GraphicsModuleCommon`](./engine/GraphicsModuleCommon.cpp).
+| index | name             | args                | description                                      |
+| ----- | ---------------- | ------------------- | ------------------------------------------------ |
+| 0     | set_display_sbuf | `handle --`         | set the sbuf used as screen (must be 16384 long) |
+| 1     | is_key_down      | `key -- down?`      | is the key down? raylib keycodes                 |
+| 2     | blit             | `x y sprite_ptr --` | [blit](#blit)                                    |
+| 3     | is_key_pressed   | `key -- pressed?`   | is the key pressed? raylib keycodes              |
+
+#### blit
+Draw the sprite pointed to by _sprite\_ptr_ (residing in program memory) to the
+screen sbuf at the pixel coordinates _x_, _y_.
+
+A sprite has the following layout:
+| field  | size               | desc                                         |
+| ------ | ------------------ | -------------------------------------------- |
+| width  | 1 byte             | sprite width                                 |
+| height | 1 byte             | sprite height                                |
+| data   | width*height bytes | sprite data. 1 byte (0-15 allowed) per pixel |
+
+### sbufs
+Sbufs are shared buffers which can be used to store bulk data accessible from
+multiple modules. Sbufs are referred to by handle, which are global and can be
+passed between modules. IO cannot be directly performed on sbufs unlike program
+memory. Any r/w must be performed through the interface defined by the `sbuf_*`
+functions in the base module.
+
+For all the sbuf manipulation routines below, indexing is _bytewise_ (unlike the
+stack).
+
+The display module depends on a single sbuf representing the screen data.
+
+#### sbuf_copyto
+Copy _len_ BYTES from _start_ in program memory to _dest\_start_ in the sbuf.
+The sbuf is described by _handle_.
+#### sbuf_copyfrom
+Copy _len_ BYTES from _start_ in the sbuf to _dest\_start_ in program memory.
+The sbuf is described by _handle_.
+#### sbuf_writebyte
+Write a single _byte_ to the sbuf specified by _handle_ at _index_.
+#### sbuf_readbyte
+Write a single _byte_ from the sbuf specified by _handle_ at _index_.
+#### sbuf_fill
+Fill the region from _start_ to _start_+_len_ with the specified _byte_ in the
+sbuf specified by _handle_.
+
+
+
 # todo
 - [ ] opcodes finish
 - [x] inter-module calls and rets
