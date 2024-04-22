@@ -64,9 +64,24 @@
 | `storebyte` or `!b`              | 40  | `n ptr --`               | store 1-byte word from stack to progmem  |
 | `pick`                           | 40  | `ns... idx -- ns[-idx]`  | dup the nth element to top of stack      |
 
-## calling convention
-TODO figure out how inter-module calls and returns work (push inter-module tag
-to return stack so we know when returning?)
+## Calling Convention
+For calls and returns within a module, the return program counter is pushed to
+stack while calling, and then popped and jumped to on return.
+
+Each module has it's own address space while sharing a global stack. This means
+that we must also store the caller module when executing an `extern_call`. On
+return, the callee does not know whether it was called externally or internally.
+It must check, and load back into the caller module if it was an external
+return.
+
+This is accomplished by setting the high (sign) bit of the return address (which
+is pushed to the return stack) during an `extern_call`. Before this is pushed to
+the return stack, the module ID is pushed to the return stack.
+
+In a `ret`, the high bit is checked. If it is cleared, this is an internal
+return and the value is jumped to. If the bit is set, this is an external ret.
+The _next_ value on the return stack is popped indicating the caller module.
+This module is loaded and the return value is jumped to.
 
 ## `as2.py` syntax
 ```
@@ -264,8 +279,8 @@ sbuf specified by _handle_.
 - [ ] port assembler to cpp
 - [ ] unit test?
 - [x] raylib frontend with graphics (MVP)
-- [ ] Don't directly bake zero allocations in to .bin, add them in the header or
-      something (or alloc from system)
+- [x] Don't directly bake zero allocations in to .bin, add them in the header or
+      something (or alloc from system) (DONE: sbufs)
 - [ ] add value of label baked in to progmem, eg `jump_imm #&label`
 - [ ] gracefully fail if:
   - [ ] loading a module that is not found
